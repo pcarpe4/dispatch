@@ -1,0 +1,28 @@
+# Runtime configuration for the agent and chatbot.
+# Env vars (see .env.example) take precedence for secrets and endpoints.
+
+agent:
+  # Output formatter: csv | xlsx | json. See agent/formatter.py to add more.
+  output_format: csv
+  output_filename_template: "compliance_{week_id}.{ext}"
+  # Max chars of file content sent to the LLM per file. Truncation is logged.
+  max_chars_per_file: 40000
+  # LLM sampling
+  temperature: 0.1
+  max_output_tokens: 8000
+
+indexer:
+  # Run cadence is enforced by the CronJob; this just controls a single run.
+  batch_size: 32
+  chunk_chars: 1500
+  chunk_overlap: 200
+  # Mongo Atlas Vector Search index name (must be created in Atlas UI/API).
+  vector_index: compliance_vector_idx
+
+chatbot:
+  top_k: 6
+  # System prompt prepended to every user turn.
+  system_prompt: |
+    You answer questions about the weekly compliance process using only the
+    provided context. Cite sources by their title and URL when available.
+    If the context does not contain the answer, say so.

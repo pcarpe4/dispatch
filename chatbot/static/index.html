@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Compliance Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { color-scheme: light dark; --gap: 12px; }
+    body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 1.25rem; margin-bottom: var(--gap); }
+    #log { display: flex; flex-direction: column; gap: var(--gap); margin-bottom: var(--gap); }
+    .turn { padding: 12px 14px; border-radius: 10px; border: 1px solid #8884; }
+    .user { background: #4d8bf022; }
+    .bot  { background: #6cc06c22; white-space: pre-wrap; }
+    .src  { font-size: 0.85rem; opacity: 0.8; margin-top: 6px; }
+    form { display: flex; gap: var(--gap); }
+    input[type=text] { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid #8886; }
+    button { padding: 10px 16px; border-radius: 8px; border: 0; background: #4d8bf0; color: white; cursor: pointer; }
+    button[disabled] { opacity: 0.5; cursor: progress; }
+  </style>
+</head>
+<body>
+  <h1>Compliance Chatbot</h1>
+  <div id="log"></div>
+  <form id="f">
+    <input id="q" type="text" placeholder="Ask about the weekly compliance process…" autocomplete="off" required />
+    <button id="send" type="submit">Send</button>
+  </form>
+  <script>
+    const log = document.getElementById('log');
+    const form = document.getElementById('f');
+    const input = document.getElementById('q');
+    const send = document.getElementById('send');
+
+    function add(role, text, sources) {
+      const el = document.createElement('div');
+      el.className = 'turn ' + role;
+      el.textContent = text;
+      if (sources && sources.length) {
+        const s = document.createElement('div');
+        s.className = 'src';
+        s.innerHTML = 'Sources: ' + sources.map((x, i) =>
+          x.url ? `<a href="${x.url}" target="_blank" rel="noopener">[${i+1}] ${x.title || x.source}</a>`
+                : `[${i+1}] ${x.title || x.source}`
+        ).join(' · ');
+        el.appendChild(s);
+      }
+      log.appendChild(el);
+      el.scrollIntoView({behavior: 'smooth', block: 'end'});
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+      add('user', message);
+      input.value = '';
+      send.disabled = true;
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: {'content-type': 'application/json'},
+          body: JSON.stringify({message}),
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        add('bot', data.answer, data.sources);
+      } catch (err) {
+        add('bot', 'Error: ' + err.message);
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>

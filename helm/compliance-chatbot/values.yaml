@@ -1,0 +1,68 @@
+image:
+  repository: image-registry.openshift-image-registry.svc:5000/REPLACE_NAMESPACE/compliance-chatbot
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  port: 8080
+
+route:
+  enabled: true
+  host: ""              # leave empty to let OpenShift assign one
+  tls:
+    enabled: true
+    termination: edge
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+# Mounted as a ConfigMap at /app/config.
+config:
+  instructionsMd: |
+    # See repo config/instructions.md — override for production here.
+  settingsYaml: |
+    agent:
+      output_format: csv
+      output_filename_template: "compliance_{week_id}.{ext}"
+      max_chars_per_file: 40000
+      temperature: 0.1
+      max_output_tokens: 8000
+    indexer:
+      batch_size: 32
+      chunk_chars: 1500
+      chunk_overlap: 200
+      vector_index: compliance_vector_idx
+    chatbot:
+      top_k: 6
+      system_prompt: |
+        You answer questions about the weekly compliance process using only the
+        provided context. Cite sources by their title and URL when available.
+
+# Non-secret env (LLM/Mongo URIs go via the existing secret you create).
+env:
+  LLM_MODEL: gpt-oss-20b
+  MONGO_DB: compliance
+  CONFLUENCE_SPACES: ""
+
+# Reference an externally managed Secret with the keys listed in .env.example.
+# Create with: oc create secret generic compliance-secrets --from-env-file=.env
+existingSecret: compliance-secrets
+
+indexer:
+  enabled: true
+  schedule: "0 6 * * 1"   # Mondays 06:00 UTC
+  source: all             # all | confluence | audit
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
