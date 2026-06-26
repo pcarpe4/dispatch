@@ -1,13 +1,9 @@
-// ---- NetObserv (flowlogs-pipeline) metrics via PodMonitor CRDs ----
+// ---- NetObserv (flowlogs-pipeline) metrics via ServiceMonitor CRDs ----
 //
-// NOTE / CAVEAT: Upstream NetObserv ships flowlogs-pipeline metrics through a
-// *ServiceMonitor*, not a PodMonitor. `prometheus.operator.podmonitors` only
-// discovers targets from PodMonitor CRDs, so this block will scrape nothing
-// unless a PodMonitor resource exists in the `netobserv` namespace that selects
-// the FLP pods (e.g. by `app=flowlogs-pipeline`) and exposes the "prometheus"
-// metrics port. If you'd rather track the stock ServiceMonitor, swap this
-// component for `prometheus.operator.servicemonitors` (same arguments).
-prometheus.operator.podmonitors "netobserv_flp" {
+// NetObserv ships flowlogs-pipeline metrics through a ServiceMonitor, so
+// `prometheus.operator.servicemonitors` discovers the FLP targets directly
+// from the stock CRD in the `netobserv` namespace.
+prometheus.operator.servicemonitors "netobserv_flp" {
   forward_to = [prometheus.relabel.netobserv_flp.receiver]
   clustering {
     enabled = true
@@ -20,7 +16,7 @@ prometheus.relabel "netobserv_flp" {
 
   rule {
     action        = "replace"
-    source_labels = ["__name__"]
+    source_labels = ["job"]
     target_label  = "job"
     replacement   = "integrations/netobserv/flowlogs-pipeline"
   }
