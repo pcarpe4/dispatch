@@ -1,61 +1,30 @@
-// ---- NetObserv (flowlogs-pipeline) metrics ----
-discovery.kubernetes "netobserv_flp" {
-  role = "endpoints"
-  namespaces {
-    names = ["netobserv"]
-  }
-}
-
-discovery.relabel "netobserv_flp" {
-  targets = discovery.kubernetes.netobserv_flp.targets
-
-  // Keep only the flowlogs-pipeline service
-  rule {
-    source_labels = ["__meta_kubernetes_service_label_app"]
-    regex         = "flowlogs-pipeline"
-    action        = "keep"
-  }
-
-  // Keep only the metrics endpoint (port named "prometheus")
-  rule {
-    source_labels = ["__meta_kubernetes_endpoint_port_name"]
-    regex         = "prometheus"
-    action        = "keep"
-  }
-
-  // Standard meta labels, matching your other jobs
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    target_label  = "namespace"
-    action        = "replace"
-  }
-  rule {
-    source_labels = ["__meta_kubernetes_pod_name"]
-    target_label  = "pod"
-    action        = "replace"
-  }
-  rule {
-    source_labels = ["__meta_kubernetes_service_name"]
-    target_label  = "service"
-    action        = "replace"
-  }
-}
-
-prometheus.scrape "netobserv_flp" {
-  job_name        = "integrations/netobserv/flowlogs-pipeline"
-  targets         = discovery.relabel.netobserv_flp.output
-  metrics_path    = "/metrics"
-  scheme          = "http"          // FLP metrics endpoint is plain HTTP (per the ServiceMonitor)
-  honor_labels    = true            // ServiceMonitor sets honorLabels: true
-  scrape_interval = "15s"           // match the ServiceMonitor interval
-  scrape_timeout  = "10s"
+// ---- NetObserv (flowlogs-pipeline) metrics via PodMonitor CRDs ----
+//
+// NOTE / CAVEAT: Upstream NetObserv ships flowlogs-pipeline metrics through a
+// *ServiceMonitor*, not a PodMonitor. `prometheus.operator.podmonitors` only
+// discovers targets from PodMonitor CRDs, so this block will scrape nothing
+// unless a PodMonitor resource exists in the `netobserv` namespace that selects
+// the FLP pods (e.g. by `app=flowlogs-pipeline`) and exposes the "prometheus"
+// metrics port. If you'd rather track the stock ServiceMonitor, swap this
+// component for `prometheus.operator.servicemonitors` (same arguments).
+prometheus.operator.podmonitors "netobserv_flp" {
+  forward_to = [prometheus.relabel.netobserv_flp.receiver]
   clustering {
     enabled = true
   }
-  forward_to = [prometheus.relabel.netobserv_flp.receiver]
+  namespaces = ["netobserv"]
 }
 
 prometheus.relabel "netobserv_flp" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+
+  rule {
+    action        = "replace"
+    source_labels = ["__name__"]
+    target_label  = "job"
+    replacement   = "integrations/netobserv/flowlogs-pipeline"
+  }
+
   // Replicate the ServiceMonitor's metricRelabelings: derive `namespace`
   // from Dst/Src K8S namespace on ingress/egress series.
   rule {
@@ -74,6 +43,4 @@ prometheus.relabel "netobserv_flp" {
     replacement   = "${3}"
     action        = "replace"
   }
-
-  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
