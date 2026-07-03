@@ -1,0 +1,1645 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Prometheus or Thanos datasource containing kserve and kserve_vllm metrics",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {"type": "grafana", "id": "grafana", "name": "Grafana", "version": "10.0.0"},
+    {"type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0"},
+    {"type": "panel", "id": "stat", "name": "Stat", "version": ""},
+    {"type": "panel", "id": "timeseries", "name": "Time series", "version": ""},
+    {"type": "panel", "id": "table", "name": "Table", "version": ""},
+    {"type": "panel", "id": "piechart", "name": "Pie chart", "version": ""},
+    {"type": "panel", "id": "barchart", "name": "Bar chart", "version": ""}
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "KServe AI Platform Usage — infrastructure view of model serving request traffic, latency, token throughput, GPU cache efficiency, and business attribution across clusters. Covers kserve_vllm metrics for vLLM-backed inference services.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total Requests",
+      "description": "Total successful inference requests in the selected time range across all selected clusters and models",
+      "gridPos": {"h": 4, "w": 3, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(increase(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\", app_id=~\"$app_id\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {"mode": "fixed", "fixedColor": "blue"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Total Tokens Processed",
+      "description": "Sum of prompt + generation tokens consumed across all selected models and clusters",
+      "gridPos": {"h": 4, "w": 3, "x": 3, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(increase(kserve_vllm:request_prompt_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__range])) + sum(increase(kserve_vllm:request_generation_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {"mode": "fixed", "fixedColor": "green"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Current Request Rate",
+      "description": "Requests per second at current time across selected filters",
+      "gridPos": {"h": 4, "w": 3, "x": 6, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(rate(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\", app_id=~\"$app_id\"}[$__rate_interval]))",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "color": {"mode": "fixed", "fixedColor": "purple"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "purple", "value": null}]}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Active Models",
+      "description": "Number of distinct model names currently serving requests",
+      "gridPos": {"h": 4, "w": 3, "x": 9, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "count(count by (model_name) (kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\"}))",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {"mode": "fixed", "fixedColor": "orange"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "orange", "value": null}]}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "P99 Time to First Token",
+      "description": "99th percentile TTFT across all selected models and clusters",
+      "gridPos": {"h": 4, "w": 3, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(kserve_vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1000},
+              {"color": "red", "value": 5000}
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "P99 Time Per Output Token",
+      "description": "99th percentile inter-token latency (TPOT) across selected models",
+      "gridPos": {"h": 4, "w": 3, "x": 15, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(kserve_vllm:time_per_output_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 1,
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 50},
+              {"color": "red", "value": 200}
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "GPU KV Cache Utilization",
+      "description": "Average GPU KV cache usage across selected clusters and models. High values indicate the cache is near capacity.",
+      "gridPos": {"h": 4, "w": 3, "x": 18, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg(kserve_vllm:gpu_cache_usage_perc{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}) * 100",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100,
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 70},
+              {"color": "red", "value": 90}
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Queued Requests",
+      "description": "Total number of requests currently waiting in queue across all selected models",
+      "gridPos": {"h": 4, "w": 3, "x": 21, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(kserve_vllm:num_requests_waiting{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"})",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 10},
+              {"color": "red", "value": 50}
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 9,
+      "type": "row",
+      "title": "Request Traffic",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 4},
+      "panels": []
+    },
+
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Request Rate by Cluster",
+      "description": "Inference requests per second broken down by cluster. Compare load across clusters to identify imbalances.",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (cluster) (rate(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\", app_id=~\"$app_id\"}[$__rate_interval]))",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "list", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Request Rate by Model",
+      "description": "Inference requests per second per model. Identifies most popular models and demand distribution across the AI portfolio.",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (model_name) (rate(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\", app_id=~\"$app_id\"}[$__rate_interval]))",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "gradientMode": "none",
+            "spanNulls": false
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 12,
+      "type": "row",
+      "title": "Token Economics",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 13},
+      "panels": []
+    },
+
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Token Throughput — Prompt vs Generation",
+      "description": "Tokens per second ingested (prompt) vs generated (output). A high prompt:generation ratio may indicate short responses or chat use cases. A low ratio indicates long-form generation.",
+      "gridPos": {"h": 8, "w": 16, "x": 0, "y": 14},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(rate(kserve_vllm:request_prompt_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__rate_interval]))",
+          "legendFormat": "Prompt tokens/s",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(rate(kserve_vllm:request_generation_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__rate_interval]))",
+          "legendFormat": "Generation tokens/s",
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(rate(kserve_vllm:request_prompt_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__rate_interval])) + sum(rate(kserve_vllm:request_generation_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__rate_interval]))",
+          "legendFormat": "Total tokens/s",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "none"},
+        "legend": {"displayMode": "list", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "spanNulls": false,
+            "stacking": {"mode": "none"}
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Total tokens/s"},
+            "properties": [
+              {"id": "custom.lineWidth", "value": 3},
+              {"id": "custom.fillOpacity", "value": 0},
+              {"id": "custom.lineStyle", "value": {"fill": "dash", "dash": [8, 4]}}
+            ]
+          }
+        ]
+      }
+    },
+
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Token Throughput by Model",
+      "description": "Total tokens/s (prompt + generation) broken down by model. Indicates which models are consuming the most compute.",
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 14},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (model_name) (rate(kserve_vllm:request_prompt_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__rate_interval])) + sum by (model_name) (rate(kserve_vllm:request_generation_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__rate_interval]))",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none"
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 15,
+      "type": "row",
+      "title": "Latency & Performance",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 22},
+      "panels": []
+    },
+
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Time to First Token (TTFT) — Percentiles",
+      "description": "How quickly the model starts generating output after receiving a request. P50/P90/P99 breakdown. High values indicate GPU contention or long prefill times on large prompts.",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 23},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(kserve_vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "P50",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.90, sum by (le) (rate(kserve_vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "P90",
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(kserve_vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "none"},
+        "legend": {"displayMode": "list", "placement": "bottom", "calcs": ["mean", "max"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "spanNulls": true
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "P99"},
+            "properties": [{"id": "custom.lineWidth", "value": 3}]
+          }
+        ]
+      }
+    },
+
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Time Per Output Token (TPOT) — Percentiles",
+      "description": "Inter-token generation latency (decoding speed). Higher values reduce streaming responsiveness. Target varies by model size — larger models naturally have higher TPOT.",
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 23},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(kserve_vllm:time_per_output_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "P50",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.90, sum by (le) (rate(kserve_vllm:time_per_output_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "P90",
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(kserve_vllm:time_per_output_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "none"},
+        "legend": {"displayMode": "list", "placement": "bottom", "calcs": ["mean", "max"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "spanNulls": true
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "P99"},
+            "properties": [{"id": "custom.lineWidth", "value": 3}]
+          }
+        ]
+      }
+    },
+
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "Request Queue Time — Percentiles",
+      "description": "Time spent waiting in queue before GPU execution begins. Sustained high queue times indicate the cluster is oversubscribed — requests are arriving faster than they can be processed.",
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 23},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(kserve_vllm:request_queue_time_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "P50",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.90, sum by (le) (rate(kserve_vllm:request_queue_time_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "P90",
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(kserve_vllm:request_queue_time_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "none"},
+        "legend": {"displayMode": "list", "placement": "bottom", "calcs": ["mean", "max"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "spanNulls": true
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "P99"},
+            "properties": [{"id": "custom.lineWidth", "value": 3}]
+          }
+        ]
+      }
+    },
+
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "TTFT by Model (P99)",
+      "description": "P99 Time to First Token broken down per model. Compares responsiveness across models — useful for capacity planning and SLA reporting.",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 31},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.99, sum by (model_name, le) (rate(kserve_vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "spanNulls": true
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "TPOT by Model (P99)",
+      "description": "P99 inter-token latency per model. A rising TPOT under load indicates decode throughput is being shared across concurrent requests (batching).",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 31},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.99, sum by (model_name, le) (rate(kserve_vllm:time_per_output_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "spanNulls": true
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 21,
+      "type": "row",
+      "title": "Queue & Concurrency",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 39},
+      "panels": []
+    },
+
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Active Requests — Running vs Waiting",
+      "description": "Number of requests currently being processed (running) vs queued (waiting). A growing wait queue while running is flat signals capacity limits. Swapped requests were evicted from GPU to CPU.",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 40},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (cluster) (kserve_vllm:num_requests_running{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"})",
+          "legendFormat": "Running — {{cluster}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (cluster) (kserve_vllm:num_requests_waiting{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"})",
+          "legendFormat": "Waiting — {{cluster}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (cluster) (kserve_vllm:num_requests_swapped{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"})",
+          "legendFormat": "Swapped — {{cluster}}",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "list", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byRegexp", "options": "^Waiting.*"},
+            "properties": [
+              {"id": "custom.fillOpacity", "value": 20},
+              {"id": "custom.lineStyle", "value": {"fill": "dash", "dash": [6, 3]}}
+            ]
+          },
+          {
+            "matcher": {"id": "byRegexp", "options": "^Swapped.*"},
+            "properties": [
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}},
+              {"id": "custom.fillOpacity", "value": 30}
+            ]
+          }
+        ]
+      }
+    },
+
+    {
+      "id": 23,
+      "type": "timeseries",
+      "title": "Concurrent Requests by Model",
+      "description": "Running requests per model. Shows which models dominate concurrent compute slots — relevant for GPU sharing and resource reservation planning.",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 40},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (model_name) (kserve_vllm:num_requests_running{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"})",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "stacking": {"mode": "normal"}
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 24,
+      "type": "row",
+      "title": "Cache & Hardware Efficiency",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 48},
+      "panels": []
+    },
+
+    {
+      "id": 25,
+      "type": "timeseries",
+      "title": "GPU KV Cache Utilization by Model",
+      "description": "Fraction of GPU KV cache blocks in use. Values near 100% mean new requests cannot be batched efficiently and will trigger preemptions. Target: sustained < 85%.",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 49},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg by (model_name) (kserve_vllm:gpu_cache_usage_perc{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}) * 100",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "color": {"mode": "palette-classic"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 70},
+              {"color": "red", "value": 90}
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 26,
+      "type": "timeseries",
+      "title": "Prefix Cache Hit Rate",
+      "description": "GPU prefix (prompt) cache hit rate. Higher values mean repeated prompt prefixes are being reused, reducing TTFT and GPU compute. Low values may indicate diverse, non-repetitive prompts or cache eviction pressure.",
+      "gridPos": {"h": 8, "w": 8, "x": 12, "y": 49},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg by (model_name) (kserve_vllm:gpu_prefix_cache_hit_rate{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}) * 100",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 27,
+      "type": "timeseries",
+      "title": "CPU KV Cache Utilization by Model",
+      "description": "CPU KV cache usage fraction. Non-zero values indicate requests have been swapped out of GPU memory to CPU — a sign of memory pressure. Sustained CPU cache usage degrades throughput significantly.",
+      "gridPos": {"h": 8, "w": 4, "x": 20, "y": 49},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg by (model_name) (kserve_vllm:cpu_cache_usage_perc{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}) * 100",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "list", "placement": "bottom", "calcs": ["max"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 5},
+              {"color": "red", "value": 20}
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 28,
+      "type": "row",
+      "title": "Business Attribution",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 57},
+      "panels": []
+    },
+
+    {
+      "id": 29,
+      "type": "piechart",
+      "title": "Request Share by Line of Business",
+      "description": "Distribution of inference requests by LOB label. Shows which business units are the primary consumers of the AI platform.",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 58},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (lob) (increase(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\", app_id=~\"$app_id\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "{{lob}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "pieType": "pie",
+        "displayLabels": ["percent", "name"],
+        "tooltip": {"mode": "single"},
+        "legend": {"displayMode": "list", "placement": "bottom"}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 30,
+      "type": "piechart",
+      "title": "Token Consumption by Line of Business",
+      "description": "Total tokens (prompt + generation) consumed per LOB. A more accurate cost proxy than request count — large-context applications show higher token volumes per request.",
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 58},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (lob) (increase(kserve_vllm:request_prompt_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__range])) + sum by (lob) (increase(kserve_vllm:request_generation_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "{{lob}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "pieType": "donut",
+        "displayLabels": ["percent", "name"],
+        "tooltip": {"mode": "single"},
+        "legend": {"displayMode": "list", "placement": "bottom"}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 31,
+      "type": "barchart",
+      "title": "Requests by Use Case",
+      "description": "Request volume per use_case label over the selected window. Reveals which workflows are driving AI platform demand.",
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 58},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sort_desc(sum by (use_case) (increase(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\", app_id=~\"$app_id\"}[$__range])))",
+          "instant": true,
+          "legendFormat": "{{use_case}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xTickLabelRotation": 0,
+        "groupWidth": 0.7,
+        "barWidth": 0.97,
+        "fillOpacity": 80,
+        "gradientMode": "none",
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "list", "placement": "bottom"}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 32,
+      "type": "row",
+      "title": "Top Consumers & Model Summary",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 66},
+      "panels": []
+    },
+
+    {
+      "id": 33,
+      "type": "table",
+      "title": "App ID Usage Summary",
+      "description": "Per-app_id breakdown of request volume, token consumption, and average request rate. Sort by Total Tokens to identify the highest-cost applications. Use to drive chargeback conversations with business units.",
+      "gridPos": {"h": 10, "w": 12, "x": 0, "y": 67},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (app_id, lob) (increase(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\", app_id=~\"$app_id\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A",
+          "format": "table"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (app_id) (increase(kserve_vllm:request_prompt_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", app_id=~\"$app_id\", lob=~\"$lob\"}[$__range])) + sum by (app_id) (increase(kserve_vllm:request_generation_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", app_id=~\"$app_id\", lob=~\"$lob\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "B",
+          "format": "table"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (app_id) (rate(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", app_id=~\"$app_id\", lob=~\"$lob\"}[$__rate_interval]))",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "C",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {"id": "merge", "options": {}},
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {"Time": true, "__name__": true},
+            "renameByName": {
+              "app_id": "App ID",
+              "lob": "LOB",
+              "Value #A": "Total Requests",
+              "Value #B": "Total Tokens",
+              "Value #C": "Req/s"
+            },
+            "indexByName": {
+              "App ID": 0,
+              "LOB": 1,
+              "Total Requests": 2,
+              "Total Tokens": 3,
+              "Req/s": 4
+            }
+          }
+        },
+        {"id": "sortBy", "options": {"fields": [{"desc": true, "displayName": "Total Tokens"}]}}
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": true,
+          "reducer": ["sum"],
+          "fields": ["Total Requests", "Total Tokens"]
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "displayMode": "auto",
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Total Requests"},
+            "properties": [
+              {"id": "unit", "value": "short"},
+              {"id": "decimals", "value": 0},
+              {"id": "custom.displayMode", "value": "color-background"},
+              {"id": "custom.width", "value": 130},
+              {"id": "color", "value": {"mode": "continuous-BlPu"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Total Tokens"},
+            "properties": [
+              {"id": "unit", "value": "short"},
+              {"id": "decimals", "value": 0},
+              {"id": "custom.displayMode", "value": "color-background"},
+              {"id": "custom.width", "value": 130},
+              {"id": "color", "value": {"mode": "continuous-GrYlRd"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Req/s"},
+            "properties": [
+              {"id": "unit", "value": "reqps"},
+              {"id": "decimals", "value": 3},
+              {"id": "custom.width", "value": 90}
+            ]
+          }
+        ]
+      }
+    },
+
+    {
+      "id": 34,
+      "type": "table",
+      "title": "Model Performance Summary",
+      "description": "Per-model comparison of request volume, token throughput, P99 latencies, and GPU cache efficiency. Use to identify models that are under-served (high TTFT, full cache) or underutilized (low req/s, low cache).",
+      "gridPos": {"h": 10, "w": 12, "x": 12, "y": 67},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (model_name) (rate(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__rate_interval]))",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A",
+          "format": "table"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (model_name) (increase(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "B",
+          "format": "table"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.99, sum by (model_name, le) (rate(kserve_vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "C",
+          "format": "table"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "histogram_quantile(0.99, sum by (model_name, le) (rate(kserve_vllm:time_per_output_token_seconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))) * 1000",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "D",
+          "format": "table"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "(sum by (model_name) (rate(kserve_vllm:request_prompt_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval])) + sum by (model_name) (rate(kserve_vllm:request_generation_tokens_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval])))",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "E",
+          "format": "table"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg by (model_name) (kserve_vllm:gpu_cache_usage_perc{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}) * 100",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "F",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {"id": "merge", "options": {}},
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {"Time": true, "__name__": true, "le": true},
+            "renameByName": {
+              "model_name": "Model",
+              "Value #A": "Req/s",
+              "Value #B": "Total Requests",
+              "Value #C": "P99 TTFT (ms)",
+              "Value #D": "P99 TPOT (ms)",
+              "Value #E": "Tokens/s",
+              "Value #F": "GPU Cache %"
+            },
+            "indexByName": {
+              "Model": 0,
+              "Req/s": 1,
+              "Total Requests": 2,
+              "P99 TTFT (ms)": 3,
+              "P99 TPOT (ms)": 4,
+              "Tokens/s": 5,
+              "GPU Cache %": 6
+            }
+          }
+        },
+        {"id": "sortBy", "options": {"fields": [{"desc": true, "displayName": "Total Requests"}]}}
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {"show": false}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "displayMode": "auto",
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Req/s"},
+            "properties": [
+              {"id": "unit", "value": "reqps"},
+              {"id": "decimals", "value": 3},
+              {"id": "custom.width", "value": 80}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Total Requests"},
+            "properties": [
+              {"id": "unit", "value": "short"},
+              {"id": "decimals", "value": 0},
+              {"id": "custom.displayMode", "value": "color-background"},
+              {"id": "color", "value": {"mode": "continuous-BlPu"}},
+              {"id": "custom.width", "value": 120}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "P99 TTFT (ms)"},
+            "properties": [
+              {"id": "unit", "value": "ms"},
+              {"id": "decimals", "value": 0},
+              {"id": "custom.displayMode", "value": "color-background"},
+              {"id": "color", "value": {"mode": "continuous-GrYlRd"}},
+              {"id": "custom.width", "value": 110}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "P99 TPOT (ms)"},
+            "properties": [
+              {"id": "unit", "value": "ms"},
+              {"id": "decimals", "value": 1},
+              {"id": "custom.displayMode", "value": "color-background"},
+              {"id": "color", "value": {"mode": "continuous-GrYlRd"}},
+              {"id": "custom.width", "value": 110}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Tokens/s"},
+            "properties": [
+              {"id": "unit", "value": "short"},
+              {"id": "decimals", "value": 1},
+              {"id": "custom.width", "value": 90}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "GPU Cache %"},
+            "properties": [
+              {"id": "unit", "value": "percent"},
+              {"id": "decimals", "value": 1},
+              {"id": "min", "value": 0},
+              {"id": "max", "value": 100},
+              {"id": "custom.displayMode", "value": "lcd-gauge"},
+              {"id": "color", "value": {"mode": "continuous-GrYlRd"}},
+              {"id": "custom.width", "value": 120}
+            ]
+          }
+        ]
+      }
+    },
+
+    {
+      "id": 35,
+      "type": "row",
+      "title": "Request Outcomes & Errors",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 77},
+      "panels": []
+    },
+
+    {
+      "id": 36,
+      "type": "timeseries",
+      "title": "Request Outcomes by Finished Reason",
+      "description": "Breakdown of how requests completed: stop (natural end), length (hit max_tokens), abort (client cancelled), error (server-side failure). High abort or error rates indicate client timeout issues or model instability.",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 78},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (finished_reason) (rate(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\", app_id=~\"$app_id\"}[$__rate_interval]))",
+          "legendFormat": "{{finished_reason}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "list", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "stacking": {"mode": "normal"}
+          },
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "stop"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "length"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "yellow"}}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "abort"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "error"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
+          }
+        ]
+      }
+    },
+
+    {
+      "id": 37,
+      "type": "timeseries",
+      "title": "Requests Truncated at max_tokens (length)",
+      "description": "Rate of requests that hit the max_tokens limit. High rates suggest callers are setting insufficient generation limits, which may cause incomplete responses and poor user experience.",
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 78},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (model_name) (rate(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\", lob=~\"$lob\", finished_reason=\"length\"}[$__rate_interval]))",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "list", "placement": "bottom", "calcs": ["mean"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15
+          },
+          "color": {"mode": "fixed", "fixedColor": "yellow"}
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 38,
+      "type": "timeseries",
+      "title": "Preemptions Over Time",
+      "description": "Number of times requests were preempted (evicted from GPU KV cache and re-queued). Preemptions reduce effective throughput. Sustained preemptions indicate insufficient GPU memory for the current batch size / model configuration.",
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 78},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (model_name) (rate(kserve_vllm:num_preemptions_total{cluster=~\"$cluster\", namespace=~\"$namespace\", model_name=~\"$model_name\"}[$__rate_interval]))",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "list", "placement": "bottom", "calcs": ["mean", "max"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "gradientMode": "opacity"
+          },
+          "color": {"mode": "fixed", "fixedColor": "red"}
+        },
+        "overrides": []
+      }
+    }
+
+  ],
+
+  "refresh": "1m",
+  "schemaVersion": 38,
+  "tags": ["kserve", "ai", "llm", "vllm", "ml-platform", "infrastructure"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Data Source",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "current": {"selected": true, "text": ["All"], "value": ["$__all"]},
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(kserve_vllm:request_success_total, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(kserve_vllm:request_success_total, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {"selected": true, "text": ["All"], "value": ["$__all"]},
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(kserve_vllm:request_success_total{cluster=~\"$cluster\"}, namespace)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Namespace",
+        "multi": true,
+        "name": "namespace",
+        "options": [],
+        "query": {
+          "query": "label_values(kserve_vllm:request_success_total{cluster=~\"$cluster\"}, namespace)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {"selected": true, "text": ["All"], "value": ["$__all"]},
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\"}, model_name)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Model",
+        "multi": true,
+        "name": "model_name",
+        "options": [],
+        "query": {
+          "query": "label_values(kserve_vllm:request_success_total{cluster=~\"$cluster\", namespace=~\"$namespace\"}, model_name)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {"selected": true, "text": ["All"], "value": ["$__all"]},
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(kserve_vllm:request_success_total{cluster=~\"$cluster\"}, lob)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Line of Business",
+        "multi": true,
+        "name": "lob",
+        "options": [],
+        "query": {
+          "query": "label_values(kserve_vllm:request_success_total{cluster=~\"$cluster\"}, lob)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {"selected": true, "text": ["All"], "value": ["$__all"]},
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(kserve_vllm:request_success_total{cluster=~\"$cluster\", lob=~\"$lob\"}, app_id)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "App ID",
+        "multi": true,
+        "name": "app_id",
+        "options": [],
+        "query": {
+          "query": "label_values(kserve_vllm:request_success_total{cluster=~\"$cluster\", lob=~\"$lob\"}, app_id)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {"selected": true, "text": ["All"], "value": ["$__all"]},
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(kserve_vllm:request_success_total{cluster=~\"$cluster\", lob=~\"$lob\"}, use_case)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Use Case",
+        "multi": true,
+        "name": "use_case",
+        "options": [],
+        "query": {
+          "query": "label_values(kserve_vllm:request_success_total{cluster=~\"$cluster\", lob=~\"$lob\"}, use_case)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {"from": "now-24h", "to": "now"},
+  "timepicker": {
+    "refresh_intervals": ["30s", "1m", "5m", "15m", "30m", "1h"]
+  },
+  "timezone": "browser",
+  "title": "KServe AI Platform Usage",
+  "uid": "kserve-ai-platform-usage",
+  "version": 1,
+  "weekStart": ""
+}
