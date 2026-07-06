@@ -49,7 +49,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "count(count by (UUID, cluster) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"}))",
+          "expr": "count(count by (cluster, Hostname, UUID) (count_over_time(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"}[$__range])))",
           "instant": true,
           "legendFormat": "",
           "refId": "A"
@@ -84,7 +84,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "avg(avg by (cluster, UUID) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"}))",
+          "expr": "avg(avg_over_time(avg by (cluster, UUID) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m]))",
           "instant": true,
           "legendFormat": "",
           "refId": "A"
@@ -172,7 +172,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum(avg by (cluster, UUID) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})) / (sum(avg by (cluster, UUID) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})) + sum(avg by (cluster, UUID) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", modelName=~\"$gpu_model\"}))) * 100",
+          "expr": "sum(avg_over_time(avg by (cluster, UUID) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m])) / (sum(avg_over_time(avg by (cluster, UUID) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m])) + sum(avg_over_time(avg by (cluster, UUID) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m]))) * 100",
           "instant": true,
           "legendFormat": "",
           "refId": "A"
@@ -209,14 +209,14 @@
     {
       "id": 5,
       "type": "stat",
-      "title": "GPUs Currently Above 80% Load",
-      "description": "Count of individual GPU devices currently running above 80% compute utilization. Even if the fleet average appears moderate, a large number of hot GPUs indicates some clusters or workloads are already at capacity.",
+      "title": "GPUs Avg >80% Load",
+      "description": "Count of GPU devices whose average compute utilization exceeded 80% during the selected time window. Even if the fleet average appears moderate, a large number of hot GPUs indicates some clusters or workloads were regularly at capacity.",
       "gridPos": {"h": 4, "w": 4, "x": 16, "y": 0},
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "count(avg by (cluster, UUID) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"}) > 80) or vector(0)",
+          "expr": "count(avg_over_time(avg by (cluster, UUID) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m]) > 80) or vector(0)",
           "instant": true,
           "legendFormat": "",
           "refId": "A"
@@ -258,7 +258,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum(avg by (cluster, UUID) (DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})) / 1000",
+          "expr": "sum(avg_over_time(avg by (cluster, UUID) (DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m])) / 1000",
           "instant": true,
           "legendFormat": "",
           "refId": "A"
@@ -348,14 +348,14 @@
     {
       "id": 9,
       "type": "bargauge",
-      "title": "Current Avg Utilization by Cluster",
-      "description": "Snapshot of each cluster's current average GPU compute utilization. A quick at-a-glance view of where each environment stands relative to the 80% expansion threshold.",
+      "title": "Avg Utilization by Cluster (Selected Period)",
+      "description": "Average GPU compute utilization per cluster over the selected time window. A quick at-a-glance view of where each environment stands relative to the 80% expansion threshold.",
       "gridPos": {"h": 9, "w": 8, "x": 16, "y": 5},
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "avg by (cluster) (avg by (cluster, UUID) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"}))",
+          "expr": "avg by (cluster) (avg_over_time(avg by (cluster, UUID) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m]))",
           "instant": true,
           "legendFormat": "{{cluster}}",
           "refId": "A"
@@ -835,7 +835,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})",
+          "expr": "last_over_time(avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m])",
           "instant": true,
           "legendFormat": "__auto",
           "refId": "A",
@@ -843,7 +843,7 @@
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", modelName=~\"$gpu_model\"}) / (avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", modelName=~\"$gpu_model\"}) + avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})) * 100",
+          "expr": "last_over_time(avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m]) / (last_over_time(avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m]) + last_over_time(avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_FB_FREE{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m])) * 100",
           "instant": true,
           "legendFormat": "__auto",
           "refId": "B",
@@ -851,7 +851,7 @@
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})",
+          "expr": "last_over_time(avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_GPU_TEMP{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m])",
           "instant": true,
           "legendFormat": "__auto",
           "refId": "C",
@@ -859,7 +859,7 @@
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})",
+          "expr": "last_over_time(avg by (cluster, Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_POWER_USAGE{cluster=~\"$cluster\", modelName=~\"$gpu_model\"})[$__range:5m])",
           "instant": true,
           "legendFormat": "__auto",
           "refId": "D",
