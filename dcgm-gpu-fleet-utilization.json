@@ -43,13 +43,13 @@
       "id": 1,
       "type": "stat",
       "title": "Total GPUs in Fleet",
-      "description": "Total number of GPU devices across all selected clusters. Each device is counted independently regardless of size.",
+      "description": "Total GPU capacity across all nodes in the selected clusters, sourced from Kubernetes node capacity (kube-state-metrics). This is the authoritative count — it reflects what Kubernetes has scheduled, not what DCGM is currently monitoring.",
       "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "count(count by (cluster, Hostname, UUID) (count_over_time(DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\", modelName=~\"$gpu_model\"}[$__range])))",
+          "expr": "sum(kube_node_status_capacity{resource=\"nvidia_com_gpu\", cluster=~\"$cluster\"})",
           "instant": true,
           "legendFormat": "",
           "refId": "A"
