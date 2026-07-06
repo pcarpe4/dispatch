@@ -173,7 +173,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "avg(DCGM_FI_PROF_GR_ENGINE_ACTIVE)",
+          "expr": "avg(avg by (UUID) (DCGM_FI_PROF_GR_ENGINE_ACTIVE))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -237,7 +237,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(DCGM_FI_DEV_FB_USED) / (sum(DCGM_FI_DEV_FB_USED) + sum(DCGM_FI_DEV_FB_FREE))",
+          "expr": "sum(avg by (UUID) (DCGM_FI_DEV_FB_USED)) / (sum(avg by (UUID) (DCGM_FI_DEV_FB_USED)) + sum(avg by (UUID) (DCGM_FI_DEV_FB_FREE)))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -301,7 +301,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count(DCGM_FI_DEV_XID_ERRORS > 0) or vector(0)",
+          "expr": "count(avg by (UUID) (DCGM_FI_DEV_XID_ERRORS) > 0) or vector(0)",
           "legendFormat": "",
           "refId": "A"
         }
@@ -429,7 +429,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "avg(DCGM_FI_PROF_GR_ENGINE_ACTIVE)",
+          "expr": "avg(avg by (UUID) (DCGM_FI_PROF_GR_ENGINE_ACTIVE))",
           "legendFormat": "Compute (engine)",
           "refId": "A"
         },
@@ -438,7 +438,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "avg(DCGM_FI_PROF_PIPE_TENSOR_ACTIVE)",
+          "expr": "avg(avg by (UUID) (DCGM_FI_PROF_PIPE_TENSOR_ACTIVE))",
           "legendFormat": "Tensor cores",
           "refId": "B"
         },
@@ -447,7 +447,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "avg(DCGM_FI_PROF_DRAM_ACTIVE)",
+          "expr": "avg(avg by (UUID) (DCGM_FI_PROF_DRAM_ACTIVE))",
           "legendFormat": "Memory bandwidth",
           "refId": "C"
         }
@@ -518,7 +518,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(DCGM_FI_PROF_GR_ENGINE_ACTIVE)",
+          "expr": "sum(avg by (UUID) (DCGM_FI_PROF_GR_ENGINE_ACTIVE))",
           "legendFormat": "Effectively used (GPU-equiv)",
           "refId": "C"
         }
@@ -583,7 +583,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(DCGM_FI_DEV_POWER_USAGE)",
+          "expr": "sum(avg by (UUID) (DCGM_FI_DEV_POWER_USAGE))",
           "legendFormat": "Fleet power",
           "refId": "A"
         }
@@ -636,7 +636,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max(DCGM_FI_DEV_GPU_TEMP)",
+          "expr": "max(avg by (UUID) (DCGM_FI_DEV_GPU_TEMP))",
           "legendFormat": "Max",
           "refId": "A"
         },
@@ -645,7 +645,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "avg(DCGM_FI_DEV_GPU_TEMP)",
+          "expr": "avg(avg by (UUID) (DCGM_FI_DEV_GPU_TEMP))",
           "legendFormat": "Average",
           "refId": "B"
         }
@@ -698,7 +698,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count(DCGM_FI_DEV_XID_ERRORS > 0) or vector(0)",
+          "expr": "count(avg by (UUID) (DCGM_FI_DEV_XID_ERRORS) > 0) or vector(0)",
           "legendFormat": "GPUs w/ errors",
           "refId": "A"
         }
@@ -763,7 +763,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(vllm:request_success_total[5m]))",
+          "expr": "sum(rate(kserve_vllm:request_success_total[5m]))",
           "legendFormat": "Requests/s",
           "refId": "A"
         }
@@ -816,7 +816,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(kserve_vllm:time_to_first_token_seconds_bucket[5m])))",
           "legendFormat": "TTFT p95",
           "refId": "A"
         },
@@ -825,7 +825,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:time_per_output_token_seconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(kserve_vllm:time_per_output_token_seconds_bucket[5m])))",
           "legendFormat": "TPOT p95",
           "refId": "B"
         }
@@ -878,7 +878,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(vllm:num_requests_running)",
+          "expr": "sum(kserve_vllm:num_requests_running)",
           "legendFormat": "Running",
           "refId": "A"
         },
@@ -887,7 +887,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(vllm:num_requests_waiting)",
+          "expr": "sum(kserve_vllm:num_requests_waiting)",
           "legendFormat": "Waiting",
           "refId": "B"
         }
