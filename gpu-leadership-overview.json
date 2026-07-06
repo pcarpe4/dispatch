@@ -61,7 +61,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(kube_node_status_allocatable{resource=\"nvidia.com/gpu\"})",
+          "expr": "sum(kube_node_status_allocatable{resource=\"nvidia_com_hpu\"})",
           "legendFormat": "",
           "refId": "A"
         }
@@ -117,7 +117,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(kube_pod_container_resource_requests{resource=\"nvidia.com/gpu\"})",
+          "expr": "sum(kube_pod_container_resource_requests{resource=\"nvidia_com_hpu\"})",
           "legendFormat": "",
           "refId": "A"
         }
@@ -361,7 +361,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count(kube_node_status_allocatable{resource=\"nvidia.com/gpu\"} > 0)",
+          "expr": "count(kube_node_status_allocatable{resource=\"nvidia_com_hpu\"} > 0)",
           "legendFormat": "",
           "refId": "A"
         }
@@ -500,7 +500,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(kube_node_status_allocatable{resource=\"nvidia.com/gpu\"})",
+          "expr": "sum(kube_node_status_allocatable{resource=\"nvidia_com_hpu\"})",
           "legendFormat": "Total capacity",
           "refId": "A"
         },
@@ -509,7 +509,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(kube_pod_container_resource_requests{resource=\"nvidia.com/gpu\"})",
+          "expr": "sum(kube_pod_container_resource_requests{resource=\"nvidia_com_hpu\"})",
           "legendFormat": "Allocated (requested)",
           "refId": "B"
         },
