@@ -1,0 +1,87 @@
+# Windows Containers for MSSQL: A Leadership Decision Brief and Presentation Plan
+
+## TL;DR
+
+- **Do not run Microsoft SQL Server in Windows containers.** Microsoft suspended its SQL Server on Windows Containers beta in July 2021 "for the foreseeable future," deleted the images with immediate effect, and has never revived it; SQL Server on Windows containers remains explicitly unsupported for production as of 2026, while SQL Server on Linux containers is fully supported for production.
+- **Windows containers carry real, structural penalties** — images several times larger than Linux, a hard host-to-container OS version-matching rule, missing Kubernetes features (no privileged/hostNetwork/DaemonSet parity), slower startup, degraded monitoring, and extra Windows Server licensing — that make them a poor fit for a stateful database.
+- **Recommended path:** use the official, supported SQL Server on **Linux** containers for dev/test and CI/CD, and for production choose a **managed service (Azure SQL Managed Instance)** or SQL Server on Linux (VM or orchestrated container). Reserve Windows containers only for their one legitimate niche: legacy .NET Framework/IIS apps that cannot be ported.
+
+
+## Key Findings
+
+1. **The vendor itself abandoned this exact use case.** On July 5, 2021, Microsoft Senior Program Manager Amit Khandelwal announced on the Microsoft Community Hub: "Due to the existing ecosystem challenges and usage patterns we have decided to suspend the SQL Server on Windows Containers beta program for foreseeable future... Hence with immediate effect, the docker hub repos 'microsoft/mssql-server-windows-express' and 'microsoft/mssql-server-windows-developer' and the tags within these repos will be deleted... SQL Server on Linux containers continue to be supported for production environment." As of 2026 Microsoft's own documentation still states SQL Server on Windows containers "isn't supported for production workloads," while the Ubuntu-based Linux images "are fully supported for production workloads."
+
+2. **Windows container images are much larger.** A complete SQL Server 2022 application image on Linux is about 1.6 GB on disk (~0.7-0.95 GB compressed). By contrast, an *empty* Windows Server Core base image (`mcr.microsoft.com/windows/servercore:ltsc2022`) is about 3.85 GB and the full Windows Server base image (`windows/server:ltsc2022`) is about 9.7 GB, per Microsoft's own Windows-Containers GitHub issue tracker; the newer ltsc2025 images are larger still (Server Core ~6.86 GB, full Windows Server ~15.9 GB unpacked). In other words, a fully functional SQL Server database container on Linux is roughly half the size of an *empty* Windows Server Core base layer before any application is even added. Community and Microsoft engineers describe Windows images as 10-1000x larger than minimal Linux images.
+
+3. **A rigid version-matching constraint.** Because the Windows kernel has no stable ABI, the container base image must match the host Windows build for process isolation. As Microsoft's own documentation states: "Windows requires the host OS version to match the container OS version. If you want to run a container based on a newer Windows build, make sure you have an equivalent host build. Otherwise, you can use Hyper-V isolation to run older containers on new host builds." Hyper-V isolation wraps each container in a lightweight VM, adding storage, memory, and CPU overhead. Linux containers have no equivalent constraint — any recent Linux host runs the images.
+
+4. **Kubernetes support for Windows is second-class.** The Kubernetes control plane must run on Linux; Windows worker nodes cannot run privileged containers, hostNetwork, shared process namespaces, or many securityContext fields, support only containerd, and lack Linux security primitives (seccomp/AppArmor/SELinux). Monitoring is degraded too: per Datadog's documentation, "Hyper-V isolation mode is not supported. Host metrics for disk, IO, and network are disabled. They are not supported by Windows Server, hence the Agent Checks are disabled by default."
+
+5. **Extra licensing and cost overhead.** Windows containers require a licensed Windows Server host. Standard edition permits only two Hyper-V-isolated containers per fully licensed host (Datacenter is needed for unlimited Hyper-V-isolated containers), and per Trusted Tech Team's Windows Server 2025 Licensing Guide, "The Standard edition starts at approximately $1,176, and the Datacenter edition at approximately $6,771 per 16-core license pack (U.S. MSRP)... Pricing remains unchanged from Windows Server 2022," plus Client Access Licenses. Linux container hosts avoid this Windows tax entirely.
+
+6. **The ecosystem has moved to Linux.** Linux dominates container hosting: 96% of surveyed production Kubernetes clusters run on a Linux node OS, per the CNCF Annual Cloud Native Survey 2025 (released January 20, 2026 by CNCF/Linux Foundation Research), a survey in which Kubernetes production use reached 82% of respondents. Linux and Docker skills are also far more abundant in the labor market than Windows-container expertise. Betting a database platform on a Windows container technology the vendor has frozen is a concentrated vendor-support risk.
+
+7. **There is one legitimate Windows-container use case — and SQL Server isn't it.** Windows containers make genuine sense for legacy .NET Framework 4.x and IIS applications that cannot be economically ported to cross-platform .NET. SQL Server does not fall in this bucket because Microsoft ships a first-class, production-supported Linux image (`mcr.microsoft.com/mssql/server`), used in AKS, OpenShift, and CI/CD.
+
+
+## Details
+
+### Slide-by-slide presentation plan
+
+**Overall narrative arc (the "attack plan").** Lead with the single most powerful, non-technical fact — *Microsoft itself pulled the plug on SQL Server in Windows containers and never brought it back* — because for a non-technical leadership audience, "the vendor doesn't support or invest in this" is more persuasive than any benchmark. Then show the structural penalties briefly to prove this isn't a one-off quirk but a pattern. Close with a positive, concrete recommendation so leadership leaves with a decision, not just a problem. Keep the tone factual and let the asymmetry of the evidence carry the argument; explicitly concede the one place Windows containers are valid, to demonstrate objectivity.
+
+**Slide 1 — "Microsoft doesn't support SQL Server in Windows containers (and hasn't for years)."**
+
+- Headline fact: the beta was suspended in July 2021 "for the foreseeable future" and the images were deleted with immediate effect; it has never returned.
+- Microsoft's current documentation: SQL Server on Windows containers is not supported for production; SQL Server on Linux containers is fully supported for production.
+- Framing for leadership: choosing this path means running an unsupported configuration for our most critical stateful workload — a compliance and operational risk with no vendor safety net.
+- Supporting visual: a simple timeline (2017 beta launch -> July 2021 suspension/deletion -> 2026 still frozen) beside Microsoft's supported-Linux statement.
+
+**Slide 2 — "Even setting support aside, the technology fights you."**
+
+- Four compact bullets, each one line: (a) Images 2-6x larger (SQL on Linux ~1.6 GB vs empty Windows Server Core ~3.85 GB, full Windows Server ~9.7 GB); (b) Host and container OS versions must match or you pay Hyper-V VM overhead; (c) Kubernetes on Windows is second-class (no privileged/hostNetwork, degraded monitoring, Linux-only control plane); (d) Extra Windows Server licensing per host ($1,176-$6,771 per 16-core pack) plus CALs.
+- One-line synthesis: "These are structural limits of the platform, not bugs we can wait out."
+- Supporting visual: a two-column "Windows container vs Linux container" comparison table.
+
+**Slide 3 — "Recommendation: use the supported paths."**
+
+- Dev/test and CI/CD: official SQL Server on **Linux** containers (`mcr.microsoft.com/mssql/server`) — production-supported, small, fast, first-class on Kubernetes/AKS/OpenShift, drops into GitHub Actions service containers.
+- Production: **Azure SQL Managed Instance** for near-100% compatibility with minimal ops, or SQL Server on Linux (VM or orchestrated container) where full instance control is required; Azure SQL Database for genuinely new cloud-native apps.
+- Honest concession: keep Windows containers on the table only for legacy .NET Framework/IIS apps that can't be ported — not for databases.
+- Ask/decision: approve standardizing SQL Server container work on Linux images, and evaluate Azure SQL Managed Instance for the production estate.
+
+### The recommended alternative, and why
+
+The evidence points to a two-track answer rather than a single product:
+
+- **For non-production (dev/test, CI/CD, ephemeral):** SQL Server on Linux containers is the clear winner — it is the only container form Microsoft supports, images are small and start fast, and it drops cleanly into existing Linux-based CI runners (e.g., GitHub Actions service containers).
+- **For production:** the strongest default is **Azure SQL Managed Instance**, a PaaS service offering near-100% SQL Server compatibility with Microsoft handling patching, backups, and HA — attractive because it removes the operational burden entirely. Where teams need OS-level control, specific features, or on-prem data residency, SQL Server on Linux on a VM (with Always On availability groups) is the pragmatic fallback. Azure SQL Database suits genuinely new, cloud-native apps that can live within its constraints.
+
+Feature caveat to flag: SQL Server on Linux does not support a handful of features — merge replication, FILESTREAM/FileTables, distributed queries to third-party sources, and some SSIS scenarios. Teams should run a quick feature audit before committing, but in practice most workloads don't use these.
+
+### Anticipated objections and responses
+
+- *"Our team knows Windows; Linux is a new skill."* -> The container images are managed by Microsoft and behave identically at the T-SQL layer; the SQL Server engine is the same on both OSes. Linux container/DevOps skills are also far more abundant in the market, reducing hiring risk.
+- *"We already have Windows Server licenses."* -> Those licenses don't make an unsupported configuration supported. Azure Hybrid Benefit lets existing licenses offset Azure SQL/VM costs, so the sunk investment isn't wasted.
+- *"Won't Microsoft bring Windows SQL containers back?"* -> Possibly, but they explicitly said only "should the circumstances change," and there has been no movement in roughly five years. Architecture decisions shouldn't rest on a frozen beta.
+- *"We need Windows containers for our app tier."* -> Fine — that can be a legitimate choice for legacy .NET Framework/IIS. It's a separate decision from the database, which should not be containerized on Windows.
+- *"Isn't a container risky for a database at all?"* -> For production, that's exactly why we recommend a managed service or a VM; containers are recommended primarily for dev/test/CI, where Linux images excel.
+
+
+## Recommendations
+
+1. **Immediately (this quarter):** Standardize all SQL Server container usage — local dev, test, CI/CD — on the official Linux images (`mcr.microsoft.com/mssql/server`). Prohibit new Windows-container SQL Server work; it runs unsupported. *Benchmark to change course:* only revisit if Microsoft formally restores production support for SQL Server on Windows containers.
+
+2. **Near term (1-2 quarters):** Run a feature-compatibility audit of the production estate against the SQL Server on Linux "unsupported features" list. If no blockers surface, pilot **Azure SQL Managed Instance** for a representative production database. *Threshold:* if the audit finds heavy use of FILESTREAM, merge replication, or SSIS-on-instance, favor SQL Server on Linux on a VM instead of PaaS.
+
+3. **Medium term:** Migrate production databases to the chosen supported target (Managed Instance preferred; SQL on Linux VM where control/features demand it), using Azure Hybrid Benefit to reuse existing licensing.
+
+4. **Keep Windows containers scoped** to legacy .NET Framework/IIS application tiers only, never the database.
+
+
+## Caveats
+
+- The strongest claim — lack of vendor support — is about *Windows* containers; SQL Server on *Linux* containers is genuinely production-supported, and this brief endorses it. Don't let the audience conflate "containers are bad for SQL Server" with "Windows containers are bad for SQL Server."
+- Some figures (image sizes, licensing list prices) vary by version, cumulative update, and reseller; treat them as representative orders of magnitude, not contract numbers.
+- Adoption percentages come from vendor/community surveys (CNCF, Stack Overflow, Sysdig, Datadog) with self-selected respondents; they reliably show direction (Linux dominance) more than precise magnitude. Notably, Datadog and Sysdig do not publish an explicit Windows-vs-Linux container split; the 96% figure is a CNCF Kubernetes-node-OS proxy.
+- The production recommendation between Azure SQL Managed Instance, Azure SQL Database, and SQL on VM/Linux depends on each workload's feature use, cost tolerance, and residency needs; the feature audit in Recommendation 2 is the deciding step.
