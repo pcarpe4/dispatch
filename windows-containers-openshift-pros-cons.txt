@@ -1,0 +1,139 @@
+# Windows Containers on OpenShift: Pros and Cons
+## PowerPoint Outline — Leadership/Architecture Audience
+
+---
+
+### SLIDE 1 — Title
+
+**Windows Containers on OpenShift: Should We Support Them?**
+A balanced assessment for platform decision-makers
+
+
+---
+
+### SLIDE 2 — What We're Talking About
+
+**Red Hat supports Windows containers on OpenShift via the Windows Machine Config Operator (WMCO)**
+
+- WMCO is an officially supported OpenShift operator that provisions and manages Windows worker nodes
+- Windows and Linux workloads run on the same OpenShift cluster — separate node pools, single control plane
+- Supported on bare metal, vSphere, AWS, Azure (including ARO), and GCP
+- Windows nodes run containerd; the OCP control plane always runs on Linux
+- Target workloads: legacy .NET Framework 4.x and IIS apps that cannot be rewritten for cross-platform .NET
+
+One-liner: *This is a real, supported, production-ready feature — the question is whether the tradeoffs justify enabling it for our platform.*
+
+
+---
+
+### SLIDE 3 — Pros
+
+**1. It is vendor-supported by both Red Hat and Microsoft**
+Red Hat ships and patches WMCO; Microsoft supports the Windows nodes themselves.
+This is not a community workaround — it has a support contract behind it.
+
+**2. One cluster, two OSes — reduced operational footprint**
+Teams manage a single OpenShift cluster instead of a separate Windows-only platform.
+Unified RBAC, networking (OVN-Kubernetes), monitoring hooks, and GitOps pipelines apply to both.
+
+**3. Unblocks legacy .NET Framework modernization**
+Applications that depend on Windows-only APIs (COM, WCF net.tcp, MSMQ, DCOM, win32) can be containerized
+without a full rewrite. This is the primary use case and the one where Windows containers have no Linux substitute.
+
+**4. Single path to production for hybrid teams**
+Development, CI/CD, and deployment tooling (Tekton, ArgoCD, oc CLI) is the same regardless of node OS.
+Windows app teams adopt container practices without learning a separate platform.
+
+**5. Enables a phased modernization strategy**
+Organizations can containerize a Windows app on OpenShift today and migrate it to Linux .NET
+on a future cycle, without a "big bang" rewrite as the price of admission to the platform.
+
+
+---
+
+### SLIDE 4 — Cons
+
+**1. Windows nodes carry mandatory Windows Server licensing costs**
+Each Windows worker node requires a Windows Server license.
+Standard edition: ~$1,176/16-core pack. Datacenter: ~$6,771/16-core pack (U.S. MSRP, unchanged from WS2022).
+Plus Client Access Licenses. Linux nodes have no equivalent OS licensing cost.
+
+**2. Windows images are substantially larger**
+An empty Windows Server Core base image (ltsc2022) is ~3.85 GB; full Windows Server is ~9.7 GB.
+The newer ltsc2025 images are larger still (~6.86 GB / ~15.9 GB).
+By comparison, a production SQL Server image on Linux is ~1.6 GB total.
+Larger images mean slower pulls, more registry storage, and longer cold-start times.
+
+**3. The Windows kernel's lack of a stable ABI imposes a version-matching constraint**
+Container image OS build must match the host node OS build for process isolation.
+Mismatches require Hyper-V isolation mode, which wraps each container in a lightweight VM,
+adding CPU, memory, and storage overhead per container.
+Linux containers have no equivalent constraint.
+
+**4. Kubernetes feature parity on Windows is incomplete**
+Windows worker nodes do not support:
+  - Privileged containers
+  - hostNetwork / hostPID / hostIPC
+  - Linux security contexts (seccomp, AppArmor, SELinux)
+  - Shared process namespaces
+  - Many CSI drivers and storage plugins
+Operators and workloads that assume these features will not run on Windows nodes without modification.
+
+**5. Observability and monitoring are degraded**
+Host-level disk, I/O, and network metrics are not available for Windows nodes in process-isolation mode.
+Hyper-V isolation mode is not supported by several major monitoring agents (e.g., Datadog).
+Teams may need separate tooling or reduced visibility for Windows workloads.
+
+**6. Platform team carries additional operational complexity**
+WMCO is a separate operator lifecycle to manage — upgrades, node drain/replace procedures,
+Windows patch cycles, and Windows-specific debugging skills.
+The Windows node talent pool is narrower than Linux, increasing key-person risk.
+
+**7. Scope creep risk**
+Enabling Windows containers creates a landing zone for workloads that *should* be ported to Linux.
+Without a clear policy gate, the Windows node pool can grow and become permanent load-bearing infrastructure
+for work that was never meant to stay on Windows.
+
+
+---
+
+### SLIDE 5 — The Honest Assessment
+
+| Factor                     | Windows Containers on OCP         | Linux Containers on OCP            |
+|----------------------------|------------------------------------|------------------------------------|
+| Vendor support             | Yes (WMCO, Red Hat + Microsoft)    | Yes (full, primary path)           |
+| Image size                 | Large (3.85 GB+ base layer)        | Small (tens to hundreds of MB)     |
+| OS version pinning         | Required (or Hyper-V overhead)     | Not required                       |
+| Kubernetes feature parity  | Partial                            | Full                               |
+| Monitoring/observability   | Degraded                           | Full                               |
+| Licensing overhead         | Windows Server per node            | None                               |
+| Right workload             | Legacy .NET Framework / IIS only   | Everything else                    |
+
+**Bottom line:** Windows containers on OpenShift solve a real problem for a narrow workload class.
+They are the *right tool for legacy .NET Framework apps*. They are a poor fit as a general-purpose platform feature.
+
+
+---
+
+### SLIDE 6 — Recommendation
+
+**Support Windows containers on OpenShift, with a defined scope and policy gate.**
+
+- **Enable WMCO** for teams with documented .NET Framework / IIS workloads that cannot be ported
+- **Require a modernization plan** as a condition of onboarding to the Windows node pool — time-boxed, not open-ended
+- **Do not use Windows nodes for databases** (SQL Server on Linux containers is the supported path)
+- **Set image pull and node autoscaling policies** to contain cost and registry footprint
+- **Review the Windows node pool quarterly** — workloads that have moved to Linux .NET should exit
+
+Enabling this feature is defensible. Enabling it without guardrails is how it becomes permanent infrastructure.
+
+
+---
+
+### SLIDE 7 — Q&A / Key Takeaways
+
+1. WMCO is a supported, production-ready feature — this is not a workaround
+2. The use case is specifically legacy .NET Framework / IIS; it is not a general-purpose feature
+3. Real costs: Windows Server licensing, larger images, reduced Kubernetes feature parity, degraded monitoring
+4. Recommended: enable with a policy gate and a modernization exit requirement, not as open-ended infrastructure
+5. SQL Server and other databases should always use Linux containers — separate decision from the app tier
