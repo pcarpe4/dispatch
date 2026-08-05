@@ -1,0 +1,15 @@
+# multi-oc cluster input file
+#
+# Format (whitespace-separated, one cluster per line):
+#   <name>  <api-url>  [extra oc-login flags...]
+#
+# - <name> is a short label used in output prefixes and --clusters selection.
+# - <api-url> must be the https:// API endpoint (usually port 6443).
+# - Anything after the URL is passed to `oc login` verbatim for that
+#   cluster (e.g. a custom CA, or TLS skip for lab clusters).
+# - Blank lines and '#' comments are ignored.
+
+prod    https://api.prod.example.com:6443
+dr      https://api.dr.example.com:6443     --certificate-authority=/etc/pki/dr-ca.crt
+dev     https://api.dev.example.com:6443
+lab     https://api.lab.example.com:6443    --insecure-skip-tls-verify=true
