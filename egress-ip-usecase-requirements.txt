@@ -1,0 +1,35 @@
+Egress IP Use Case Diagram — Requirements
+
+Create a PlantUML use case diagram in a file named egress-ip-usecase.puml for an
+"Egress IP Management Domain". Use left to right direction.
+
+Actors:
+- Platform Ops and Engineering (human, left)
+- App Team (human, left)
+- Capacity Scanner (system, right)
+- OpenShift Helix Automation (system, right)
+
+Package 1 — Egress IP Capacity Planning:
+- 1.1 Visualize Egress IP Capacity
+- 1.2 Add Egress IP Subnet to Cluster
+- 1.3 Capture Egress IP Capacity for Cluster, with <<include>> to:
+    - 1.3.1 Capture EgressIP Data
+    - 1.3.2 Capture Cluster Subnet Data
+    - 1.3.3 Capture IP DNS Data
+    - 1.3.4 Inventory Subnet Capacity Data
+- Platform Ops connects to 1.1 and 1.2; Capacity Scanner connects to 1.3
+
+Package 2 — Egress IP Onboarding (system boundary: IDP):
+- 2.1 Submit Egress IP Request (App Team)
+- 2.2 Process Egress IP Request (OpenShift Helix Automation), with <<include>> to:
+    - 2.2.1 Obtain Lock on IP
+    - 2.2.2 Verify Egress IP Capacity Available
+    - 2.2.3 Provision Egress IP
+    - 2.2.4 Allocate Egress IP in IPAM
+  also <<include>> 2.1
+- 2.2 has <<extend>> from "Reject Request - No Capacity"
+- 2.3 Notify App Team (Helix Automation initiates, App Team receives)
+- 2.4 Release Egress IP (App Team initiates, Helix Automation processes)
+
+Use dashed arrows for include/extend with stereotype labels.
+Keep human actors on the left, system actors on the right.

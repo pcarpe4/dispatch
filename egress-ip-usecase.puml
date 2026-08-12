@@ -1,0 +1,69 @@
+@startuml egress-ip-usecase
+left to right direction
+title Egress IP Management Domain
+
+' ===== Human actors (left) =====
+actor "Platform Ops and Engineering" as PlatformOps
+actor "App Team" as AppTeam
+
+' ===== System actors (right) =====
+actor "Capacity Scanner" as CapacityScanner <<system>>
+actor "OpenShift Helix Automation" as HelixAutomation <<system>>
+
+package "Egress IP Capacity Planning" {
+  usecase "1.1 Visualize Egress IP Capacity" as UC1_1
+  usecase "1.2 Add Egress IP Subnet to Cluster" as UC1_2
+  usecase "1.3 Capture Egress IP Capacity\nfor Cluster" as UC1_3
+  usecase "1.3.1 Capture EgressIP Data" as UC1_3_1
+  usecase "1.3.2 Capture Cluster Subnet Data" as UC1_3_2
+  usecase "1.3.3 Capture IP DNS Data" as UC1_3_3
+  usecase "1.3.4 Inventory Subnet\nCapacity Data" as UC1_3_4
+}
+
+package "Egress IP Onboarding" {
+  rectangle "IDP" {
+    usecase "2.1 Submit Egress IP Request" as UC2_1
+    usecase "2.2 Process Egress IP Request" as UC2_2
+    usecase "2.2.1 Obtain Lock on IP" as UC2_2_1
+    usecase "2.2.2 Verify Egress IP\nCapacity Available" as UC2_2_2
+    usecase "2.2.3 Provision Egress IP" as UC2_2_3
+    usecase "2.2.4 Allocate Egress IP in IPAM" as UC2_2_4
+    usecase "Reject Request - No Capacity" as UC2_2_ext
+    usecase "2.3 Notify App Team" as UC2_3
+    usecase "2.4 Release Egress IP" as UC2_4
+  }
+}
+
+' ===== Actor associations: Capacity Planning =====
+PlatformOps --> UC1_1
+PlatformOps --> UC1_2
+CapacityScanner --> UC1_3
+
+' ===== Includes: 1.3 =====
+UC1_3 ..> UC1_3_1 : <<include>>
+UC1_3 ..> UC1_3_2 : <<include>>
+UC1_3 ..> UC1_3_3 : <<include>>
+UC1_3 ..> UC1_3_4 : <<include>>
+
+' ===== Actor associations: Onboarding =====
+AppTeam --> UC2_1
+HelixAutomation --> UC2_2
+
+' ===== Includes: 2.2 =====
+UC2_2 ..> UC2_2_1 : <<include>>
+UC2_2 ..> UC2_2_2 : <<include>>
+UC2_2 ..> UC2_2_3 : <<include>>
+UC2_2 ..> UC2_2_4 : <<include>>
+UC2_2 ..> UC2_1 : <<include>>
+
+' ===== Extend: reject when no capacity =====
+UC2_2_ext ..> UC2_2 : <<extend>>
+
+' ===== Notification and release flows =====
+HelixAutomation --> UC2_3
+UC2_3 --> AppTeam
+
+AppTeam --> UC2_4
+UC2_4 --> HelixAutomation
+
+@enduml
