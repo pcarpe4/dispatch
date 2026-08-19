@@ -1,0 +1,1136 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Prometheus / Thanos datasource with multi-cluster OpenShift telemetry (metrics must carry a 'cluster' label; adjust label name if your estate uses a different one, e.g. '_id' for OCP telemetry)",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "9.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "bargauge",
+      "name": "Bar gauge",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "state-timeline",
+      "name": "State timeline",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "enable": true,
+        "expr": "max by (cluster) (cluster_operator_conditions{name=\"version\",condition=\"Progressing\",cluster=~\"$cluster\"}) == 1",
+        "hide": false,
+        "iconColor": "blue",
+        "name": "Planned: cluster upgrade in progress",
+        "step": "5m",
+        "titleFormat": "Upgrade: {{cluster}}",
+        "useValueForTime": false
+      }
+    ]
+  },
+  "description": "Historical availability across the OpenShift estate. Measures cluster and node availability, excludes planned maintenance (cluster upgrades, cordoned nodes) where possible, highlights clusters with the highest unplanned downtime, and supports drilldown from estate -> cluster -> node. Uptime percentages are computed over the dashboard time range (default 30 days).",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "id": 100,
+      "panels": [],
+      "title": "Estate overview (uptime over selected time range)",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Average cluster uptime across the estate over the selected time range, excluding planned maintenance windows (cluster upgrade in progress). A cluster counts as up when all ClusterOperators report Available=1.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "decimals": 3,
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 0.99},
+              {"color": "green", "value": 0.995}
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 4, "x": 0, "y": 1},
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg(avg_over_time(((clamp_max((min by (cluster) (cluster_operator_conditions{condition=\"Available\"})) + on (cluster) (max by (cluster) (cluster_operator_conditions{name=\"version\",condition=\"Progressing\"})), 1)) or (min by (cluster) (cluster_operator_conditions{condition=\"Available\"})))[$__range:5m]))",
+          "instant": true,
+          "legendFormat": "Cluster uptime (excl. planned)",
+          "refId": "A"
+        }
+      ],
+      "title": "Estate cluster uptime (excl. planned maintenance)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Average cluster uptime across the estate over the selected time range with NO maintenance exclusion (raw availability).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "decimals": 3,
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 0.99},
+              {"color": "green", "value": 0.995}
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 4, "x": 4, "y": 1},
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg(avg_over_time((min by (cluster) (cluster_operator_conditions{condition=\"Available\"}))[$__range:5m]))",
+          "instant": true,
+          "legendFormat": "Cluster uptime (raw)",
+          "refId": "A"
+        }
+      ],
+      "title": "Estate cluster uptime (raw, incl. maintenance)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Average node uptime across the estate over the selected time range, excluding planned maintenance (node cordoned / unschedulable, e.g. during drains and upgrades). A node counts as up when kube_node_status_condition{condition=\"Ready\"} is true.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "decimals": 3,
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 0.99},
+              {"color": "green", "value": 0.995}
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 4, "x": 8, "y": 1},
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg(avg_over_time(((clamp_max(sum by (cluster, node) (kube_node_status_condition{condition=\"Ready\",status=\"true\"}) + on (cluster, node) kube_node_spec_unschedulable, 1)) or (sum by (cluster, node) (kube_node_status_condition{condition=\"Ready\",status=\"true\"})))[$__range:5m]))",
+          "instant": true,
+          "legendFormat": "Node uptime (excl. maintenance)",
+          "refId": "A"
+        }
+      ],
+      "title": "Estate node uptime (excl. planned maintenance)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Number of clusters whose uptime (excluding planned maintenance) over the selected time range is below the SLO threshold ($slo %).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "red", "value": 1}
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 4, "x": 12, "y": 1},
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "count((avg_over_time(((clamp_max((min by (cluster) (cluster_operator_conditions{condition=\"Available\"})) + on (cluster) (max by (cluster) (cluster_operator_conditions{name=\"version\",condition=\"Progressing\"})), 1)) or (min by (cluster) (cluster_operator_conditions{condition=\"Available\"})))[$__range:5m]) * 100) < $slo) or vector(0)",
+          "instant": true,
+          "legendFormat": "Clusters below SLO",
+          "refId": "A"
+        }
+      ],
+      "title": "Clusters below $slo% uptime SLO",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Nodes currently NotReady that are NOT cordoned, i.e. unplanned right now.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "red", "value": 1}
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 4, "x": 16, "y": 1},
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(((sum by (cluster, node) (kube_node_status_condition{condition=\"Ready\",status=\"true\"})) == bool 0) * on (cluster, node) (1 - kube_node_spec_unschedulable)) or vector(0)",
+          "instant": true,
+          "legendFormat": "NotReady (unplanned)",
+          "refId": "A"
+        }
+      ],
+      "title": "Nodes NotReady now (unplanned)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Clusters currently in a planned maintenance window (cluster upgrade in progress).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "blue", "value": 1}
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 4, "x": 20, "y": 1},
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "count(max by (cluster) (cluster_operator_conditions{name=\"version\",condition=\"Progressing\"}) == 1) or vector(0)",
+          "instant": true,
+          "legendFormat": "Upgrading now",
+          "refId": "A"
+        }
+      ],
+      "title": "Clusters upgrading now (planned)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Clusters ranked by unplanned downtime percentage over the selected time range (planned maintenance windows excluded). Use this to target follow-up: click a cluster name, then set the $cluster variable to drill down.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "decimals": 3,
+          "mappings": [],
+          "max": 0.05,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0.005},
+              {"color": "red", "value": 0.01}
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 9, "w": 10, "x": 0, "y": 5},
+      "id": 7,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "showUnfilled": true
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "topk(10, clamp_min(1 - avg_over_time(((clamp_max((min by (cluster) (cluster_operator_conditions{condition=\"Available\"})) + on (cluster) (max by (cluster) (cluster_operator_conditions{name=\"version\",condition=\"Progressing\"})), 1)) or (min by (cluster) (cluster_operator_conditions{condition=\"Available\"})))[$__range:5m]), 0))",
+          "instant": true,
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 10 clusters by unplanned downtime",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Per-cluster availability over the selected time range: raw uptime, uptime excluding planned maintenance, time spent in planned maintenance, and unplanned downtime in minutes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "displayMode": "auto", "filterable": true, "inspect": false},
+          "decimals": 3,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{"color": "green", "value": null}]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Uptime raw %"},
+            "properties": [
+              {"id": "unit", "value": "percent"},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 99}, {"color": "green", "value": 99.5}]}},
+              {"id": "custom.displayMode", "value": "color-text"}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Uptime excl. planned %"},
+            "properties": [
+              {"id": "unit", "value": "percent"},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 99}, {"color": "green", "value": 99.5}]}},
+              {"id": "custom.displayMode", "value": "color-text"}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Planned maintenance %"},
+            "properties": [{"id": "unit", "value": "percent"}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Unplanned downtime (min)"},
+            "properties": [
+              {"id": "unit", "value": "m"},
+              {"id": "decimals", "value": 1},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 5}, {"color": "red", "value": 30}]}},
+              {"id": "custom.displayMode", "value": "color-text"}
+            ]
+          }
+        ]
+      },
+      "gridPos": {"h": 9, "w": 14, "x": 10, "y": 5},
+      "id": 8,
+      "options": {
+        "footer": {"fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "Unplanned downtime (min)"}]
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg_over_time((min by (cluster) (cluster_operator_conditions{condition=\"Available\"}))[$__range:5m]) * 100",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg_over_time(((clamp_max((min by (cluster) (cluster_operator_conditions{condition=\"Available\"})) + on (cluster) (max by (cluster) (cluster_operator_conditions{name=\"version\",condition=\"Progressing\"})), 1)) or (min by (cluster) (cluster_operator_conditions{condition=\"Available\"})))[$__range:5m]) * 100",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "(avg_over_time((max by (cluster) (cluster_operator_conditions{name=\"version\",condition=\"Progressing\"}))[$__range:5m]) * 100) or (min by (cluster) (cluster_operator_conditions{condition=\"Available\"}) * 0)",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "clamp_min(1 - avg_over_time(((clamp_max((min by (cluster) (cluster_operator_conditions{condition=\"Available\"})) + on (cluster) (max by (cluster) (cluster_operator_conditions{name=\"version\",condition=\"Progressing\"})), 1)) or (min by (cluster) (cluster_operator_conditions{condition=\"Available\"})))[$__range:5m]), 0) * $__range_s / 60",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        }
+      ],
+      "title": "Cluster availability summary (selected range)",
+      "transformations": [
+        {"id": "merge", "options": {}},
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {"Time": true},
+            "indexByName": {},
+            "renameByName": {
+              "Value #A": "Uptime raw %",
+              "Value #B": "Uptime excl. planned %",
+              "Value #C": "Planned maintenance %",
+              "Value #D": "Unplanned downtime (min)",
+              "cluster": "Cluster"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Estate availability over time: total clusters reporting, clusters with all ClusterOperators available, and clusters in a planned upgrade window.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "clusters",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "none"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 14},
+      "id": 9,
+      "options": {
+        "legend": {"calcs": ["mean", "min", "last"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "count(min by (cluster) (cluster_operator_conditions{condition=\"Available\"}))",
+          "legendFormat": "Total clusters reporting",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(clamp_max(min by (cluster) (cluster_operator_conditions{condition=\"Available\"}), 1))",
+          "legendFormat": "Clusters fully available",
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(max by (cluster) (cluster_operator_conditions{name=\"version\",condition=\"Progressing\"}))",
+          "legendFormat": "Clusters upgrading (planned)",
+          "refId": "C"
+        }
+      ],
+      "title": "Estate availability over time",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": {"h": 6, "w": 24, "x": 0, "y": 22},
+      "id": 10,
+      "options": {
+        "code": {"language": "plaintext", "showLineNumbers": false, "showMiniMap": false},
+        "content": "### How uptime is calculated (repeatable method)\n\n**Cluster up (sample = 1):** every ClusterOperator reports `Available=1` — `min by (cluster) (cluster_operator_conditions{condition=\"Available\"})`. This folds in API server availability, ClusterVersion operator health, ClusterOperator availability states and control-plane readiness, since each is a ClusterOperator (`kube-apiserver`, `version`, `etcd`, `kube-controller-manager`, ...).\n\n**Node up (sample = 1):** `kube_node_status_condition{condition=\"Ready\",status=\"true\"}`.\n\n**Planned maintenance:** cluster level = ClusterVersion upgrade in progress (`cluster_operator_conditions{name=\"version\",condition=\"Progressing\"}=1`); node level = node cordoned (`kube_node_spec_unschedulable=1`, e.g. during drains/upgrades). Maintenance windows are counted as *up* in the \"excl. planned\" numbers: `clamp_max(up + maintenance, 1)`.\n\n**Uptime % = `avg_over_time(up_signal[$__range:5m])`** — the mean of the 0/1 up signal sampled every 5 minutes over the dashboard time range, so the number always follows the time picker (default: 30 days). Unplanned downtime minutes = `(1 - uptime_excl_planned) * range_seconds / 60`.\n\n*Notes:* metrics must carry a `cluster` label (central Thanos / multi-cluster observability). Detection resolution is 5 minutes — outages shorter than that may be missed. Maintenance not expressed as an upgrade or cordon (e.g. ad-hoc work) is not auto-excluded; use the upgrade annotations to review windows manually.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "9.0.0",
+      "title": "Methodology",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 28},
+      "id": 101,
+      "panels": [],
+      "title": "Cluster drilldown — $cluster",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "0/1 availability signal per selected cluster (all ClusterOperators available), with the planned-maintenance (upgrade) signal overlaid. Blue annotations mark upgrade windows.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "none"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "max": 1.1,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 29},
+      "id": 11,
+      "options": {
+        "legend": {"calcs": ["mean", "last"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "min by (cluster) (cluster_operator_conditions{condition=\"Available\",cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} — available",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "max by (cluster) (cluster_operator_conditions{name=\"version\",condition=\"Progressing\",cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} — upgrade in progress (planned)",
+          "refId": "B"
+        }
+      ],
+      "title": "Cluster availability signal",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Control-plane component health per selected cluster: scrape-level availability (up) of the API server, etcd, controller manager and scheduler.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "none"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "max": 1.1,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 37},
+      "id": 12,
+      "options": {
+        "legend": {"calcs": ["mean", "min"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg by (cluster, job) (up{job=~\"apiserver|etcd|kube-controller-manager|kube-scheduler|scheduler|controller-manager\", cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} — {{job}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Control plane readiness (up by component)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "API server scrape availability per selected cluster (fraction of API server targets up). Mean over the legend = API server availability for the selected range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "none"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "max": 1.1,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 37},
+      "id": 13,
+      "options": {
+        "legend": {"calcs": ["mean", "min"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg by (cluster) (up{job=\"apiserver\", cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} — apiserver",
+          "refId": "A"
+        }
+      ],
+      "title": "API server availability",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "ClusterOperators currently Unavailable or Degraded in the selected cluster(s). Empty table = all operators healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "displayMode": "auto", "filterable": true, "inspect": false},
+          "mappings": [
+            {
+              "options": {
+                "0": {"color": "red", "index": 0, "text": "Unavailable"},
+                "1": {"color": "orange", "index": 1, "text": "Degraded"}
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 45},
+      "id": 14,
+      "options": {
+        "footer": {"fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": false, "displayName": "Cluster"}]
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "(cluster_operator_conditions{condition=\"Available\",cluster=~\"$cluster\"} == 0) or (cluster_operator_conditions{condition=\"Degraded\",cluster=~\"$cluster\"} == 1)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Unhealthy cluster operators (now)",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {"Time": true, "Value": true, "container": true, "endpoint": true, "instance": true, "job": true, "namespace": true, "pod": true, "prometheus": true, "reason": true, "service": true, "status": true},
+            "indexByName": {"cluster": 0, "name": 1, "condition": 2},
+            "renameByName": {"cluster": "Cluster", "condition": "Condition", "name": "Operator"}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "ClusterVersion operator activity for the selected cluster(s): Progressing=1 means an upgrade (planned maintenance window); Failing/Degraded=1 means the ClusterVersion operator itself is unhealthy.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "none"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "max": 1.1,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 45},
+      "id": 15,
+      "options": {
+        "legend": {"calcs": ["mean", "last"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "max by (cluster, condition) (cluster_operator_conditions{name=\"version\", condition=~\"Progressing|Failing|Degraded|Available\", cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} — {{condition}}",
+          "refId": "A"
+        }
+      ],
+      "title": "ClusterVersion operator health / upgrade activity",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 53},
+      "id": 102,
+      "panels": [],
+      "title": "Node drilldown — $cluster / $node",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Ready state per node over time. Green = Ready, red = NotReady. Compare red bands with the upgrade annotations and the maintenance panel below to classify outages as planned vs unplanned.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {
+            "fillOpacity": 70,
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineWidth": 0,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {"color": "red", "index": 0, "text": "NotReady"},
+                "1": {"color": "green", "index": 1, "text": "Ready"}
+              },
+              "type": "value"
+            }
+          ],
+          "max": 1,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 54},
+      "id": 16,
+      "options": {
+        "alignValue": "left",
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": false},
+        "mergeValues": true,
+        "rowHeight": 0.85,
+        "showValue": "never",
+        "tooltip": {"mode": "single", "sort": "none"}
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (cluster, node) (kube_node_status_condition{condition=\"Ready\",status=\"true\",cluster=~\"$cluster\",node=~\"$node\"})",
+          "legendFormat": "{{cluster}} / {{node}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Node Ready state timeline",
+      "type": "state-timeline"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Per-node uptime over the selected time range: raw, excluding cordoned (maintenance) time, and unplanned downtime minutes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "displayMode": "auto", "filterable": true, "inspect": false},
+          "decimals": 3,
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Uptime raw %"},
+            "properties": [
+              {"id": "unit", "value": "percent"},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 99}, {"color": "green", "value": 99.5}]}},
+              {"id": "custom.displayMode", "value": "color-text"}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Uptime excl. maintenance %"},
+            "properties": [
+              {"id": "unit", "value": "percent"},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 99}, {"color": "green", "value": 99.5}]}},
+              {"id": "custom.displayMode", "value": "color-text"}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Unplanned downtime (min)"},
+            "properties": [
+              {"id": "unit", "value": "m"},
+              {"id": "decimals", "value": 1},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 5}, {"color": "red", "value": 30}]}},
+              {"id": "custom.displayMode", "value": "color-text"}
+            ]
+          }
+        ]
+      },
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 64},
+      "id": 17,
+      "options": {
+        "footer": {"fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "Unplanned downtime (min)"}]
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg_over_time((sum by (cluster, node) (kube_node_status_condition{condition=\"Ready\",status=\"true\",cluster=~\"$cluster\",node=~\"$node\"}))[$__range:5m]) * 100",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg_over_time(((clamp_max(sum by (cluster, node) (kube_node_status_condition{condition=\"Ready\",status=\"true\",cluster=~\"$cluster\",node=~\"$node\"}) + on (cluster, node) kube_node_spec_unschedulable{cluster=~\"$cluster\",node=~\"$node\"}, 1)) or (sum by (cluster, node) (kube_node_status_condition{condition=\"Ready\",status=\"true\",cluster=~\"$cluster\",node=~\"$node\"})))[$__range:5m]) * 100",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "clamp_min(1 - avg_over_time(((clamp_max(sum by (cluster, node) (kube_node_status_condition{condition=\"Ready\",status=\"true\",cluster=~\"$cluster\",node=~\"$node\"}) + on (cluster, node) kube_node_spec_unschedulable{cluster=~\"$cluster\",node=~\"$node\"}, 1)) or (sum by (cluster, node) (kube_node_status_condition{condition=\"Ready\",status=\"true\",cluster=~\"$cluster\",node=~\"$node\"})))[$__range:5m]), 0) * $__range_s / 60",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Node availability summary (selected range)",
+      "transformations": [
+        {"id": "merge", "options": {}},
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {"Time": true},
+            "indexByName": {},
+            "renameByName": {
+              "Value #A": "Uptime raw %",
+              "Value #B": "Uptime excl. maintenance %",
+              "Value #C": "Unplanned downtime (min)",
+              "cluster": "Cluster",
+              "node": "Node"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Per selected cluster: count of nodes NotReady while NOT cordoned (unplanned) vs nodes cordoned/unschedulable (planned maintenance, e.g. drain during upgrade).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "nodes",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "none"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 64},
+      "id": 18,
+      "options": {
+        "legend": {"calcs": ["max", "last"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (cluster) (((sum by (cluster, node) (kube_node_status_condition{condition=\"Ready\",status=\"true\",cluster=~\"$cluster\"})) == bool 0) * on (cluster, node) (1 - kube_node_spec_unschedulable{cluster=~\"$cluster\"}))",
+          "legendFormat": "{{cluster}} — NotReady (unplanned)",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by (cluster) (kube_node_spec_unschedulable{cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} — cordoned (planned maintenance)",
+          "refId": "B"
+        }
+      ],
+      "title": "NotReady vs in-maintenance nodes",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": ["openshift", "kubernetes", "availability", "uptime", "sre"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(kube_node_status_condition, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "query": "label_values(kube_node_status_condition, cluster)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(kube_node_status_condition{cluster=~\"$cluster\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(kube_node_status_condition{cluster=~\"$cluster\"}, node)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {"selected": false, "text": "99.5", "value": "99.5"},
+        "hide": 0,
+        "label": "Uptime SLO %",
+        "name": "slo",
+        "options": [{"selected": true, "text": "99.5", "value": "99.5"}],
+        "query": "99.5",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {"from": "now-30d", "to": "now"},
+  "timepicker": {
+    "refresh_intervals": ["1m", "5m", "15m", "30m", "1h", "6h", "12h", "1d"]
+  },
+  "timezone": "",
+  "title": "OpenShift / Estate Availability & Uptime",
+  "uid": "openshift-estate-availability",
+  "version": 1,
+  "weekStart": ""
+}
