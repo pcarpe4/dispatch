@@ -1,14 +1,23 @@
 'use strict';
 
 /* ============================== CONFIG =====================================
- * SIGNALING is the only thing to change when self-hosting a PeerServer.
- * Empty object = PeerJS public cloud. For a self-hosted server use e.g.:
- *   const SIGNALING = { host: 'peers.example.com', port: 443, path: '/', secure: true };
+ * SIGNALING is the only thing to change to move the signaling server.
+ * Default: the self-hosted PeerServer that server.js starts on port 9000,
+ * on whatever host served this page. To use the public PeerJS cloud instead,
+ * set it to {} — or point host/port at any PeerServer you run elsewhere.
  * Signaling only brokers the connection; game/chat data flows peer-to-peer
  * over WebRTC data channels, which are always DTLS-encrypted.
+ * config.iceServers: [] disables Google's default STUN servers — fine on a
+ * LAN; add a STUN/TURN server here if peers must connect across NATs.
  * ========================================================================== */
-const SIGNALING = {};
-const ID_PREFIX = 'p2pchs-'; // namespaces our room codes on the public server
+const SIGNALING = {
+  host: location.hostname,
+  port: 9000,
+  path: '/',
+  secure: location.protocol === 'https:',
+  config: { iceServers: [] },
+};
+const ID_PREFIX = 'p2pchs-'; // namespaces our room codes on the signaling server
 
 /* ------------------------------ State ------------------------------------ */
 let peer = null;        // our PeerJS peer
@@ -28,6 +37,7 @@ let selected = null, legalTargets = [];
 let drawOfferedBy = null;        // 'white' | 'black'
 let rematchVotes = {};           // {white: true, black: true}
 let pendingPromo = null;         // {from, to} awaiting promotion choice
+let lastHostSeen = 0;            // guest: timestamp of last message from host
 
 const GLYPH = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛', k: '♚' };
 const $ = id => document.getElementById(id);
@@ -56,6 +66,7 @@ function startHost(code, fixedCode) {
     enterRoom();
   });
   peer.on('connection', conn => {
+    conn.lastSeen = Date.now();
     conn.on('data', msg => hostOnData(conn, msg));
     conn.on('close', () => hostOnClose(conn));
     conns.push(conn);
@@ -78,7 +89,7 @@ function joinRoom(code) {
   peer = makePeer(null);
   peer.on('open', () => {
     hostConn = peer.connect(ID_PREFIX + code, { reliable: true });
-    hostConn.on('open', () => hostConn.send({ type: 'hello', name: myName }));
+    hostConn.on('open', () => { lastHostSeen = Date.now(); hostConn.send({ type: 'hello', name: myName }); });
     hostConn.on('data', msg => handleFromHost(msg));
     hostConn.on('close', hostGone);
   });
@@ -100,6 +111,25 @@ function broadcast(msg, exceptConn) {
   conns.forEach(c => { if (c.open && c !== exceptConn) c.send(msg); });
 }
 
+/* Heartbeat. WebRTC gives no reliable 'close' event when a peer vanishes
+ * abruptly (crash, network drop, killed tab) — the ICE state can sit in
+ * 'disconnected' forever — so both sides ping every 4s and treat 12s of
+ * silence as a disconnect. */
+const PING_MS = 4000, SILENCE_MS = 12000;
+setInterval(() => {
+  const now = Date.now();
+  if (isHost) {
+    conns.forEach(c => {
+      if (!c.open) return;
+      c.send({ type: 'ping' });
+      if (now - (c.lastSeen || now) > SILENCE_MS) { c.close(); hostOnClose(c); }
+    });
+  } else if (hostConn && hostConn.open) {
+    hostConn.send({ type: 'ping' });
+    if (lastHostSeen && now - lastHostSeen > SILENCE_MS) { hostConn.close(); hostGone(); }
+  }
+}, PING_MS);
+
 /* ========================== MESSAGE PROTOCOL ===============================
  * hello      {name}                          guest -> host, once, on connect
  * welcome    {code, role, roster, moves,     host -> new guest: full state
@@ -118,6 +148,8 @@ function broadcast(msg, exceptConn) {
 
 /* Host: validate incoming guest messages, apply locally, relay to the rest. */
 function hostOnData(conn, msg) {
+  conn.lastSeen = Date.now();
+  if (msg.type === 'ping') return;
   const entry = roster.find(p => p.id === conn.peer);
   const role = entry ? entry.role : null;
   switch (msg.type) {
@@ -186,7 +218,7 @@ function hostAddPeer(conn, name) {
 function hostOnClose(conn) {
   conns = conns.filter(c => c !== conn);
   const entry = roster.find(p => p.id === conn.peer);
-  if (!entry) return;
+  if (!entry || !entry.connected) return; // already handled (heartbeat + close event)
   entry.connected = false;
   const text = entry.name + ' (' + cap(entry.role) + ') disconnected';
   applySys(text);
@@ -198,7 +230,9 @@ function hostOnClose(conn) {
 /* Guest: everything arrives pre-vetted from the host, but moves are still
  * re-validated locally by chess.js inside applyMove(). */
 function handleFromHost(msg) {
+  lastHostSeen = Date.now();
   switch (msg.type) {
+    case 'ping': return;
     case 'welcome':
       frozen = false;
       myRole = msg.role; roster = msg.roster;
@@ -227,6 +261,7 @@ function handleFromHost(msg) {
 }
 
 function hostGone() {
+  if (frozen) return; // already handled (heartbeat + close event)
   frozen = true;
   clearSel();
   applySys('Host disconnected — board frozen');

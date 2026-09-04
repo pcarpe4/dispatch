@@ -1,23 +1,35 @@
 # P2P Chess
 
 A lightweight browser-based peer-to-peer chess app with chat and spectators.
-One HTML file, one JS file, one CSS file — no build step, no framework, no backend
-(other than WebRTC signaling).
+One HTML file, one JS file, one CSS file — no build step, no framework, no
+accounts, no database. Fully self-hosted: the bundled server serves the static
+files **and** runs your own signaling server, so no third-party service is
+involved.
 
 ## Run
 
 ```
-npx serve chess
+cd chess
+npm install   # first time only — installs the PeerServer signaling package
+node server.js
 ```
 
-(or `node chess/server.js`) — then open the printed URL.
+Then open http://localhost:3000. That one command runs:
+
+- the static site on port **3000**
+- your own PeerJS signaling server (PeerServer) on port **9000**
+
+The app signals through whatever host served the page (`location.hostname`),
+so it works unchanged on your LAN — share `http://<your-ip>:3000?join=CODE`.
 
 ## How it works
 
 - **Rules**: [chess.js](https://github.com/jhlywa/chess.js) via CDN. Every peer
   re-validates every move before applying it.
 - **Networking**: [PeerJS](https://peerjs.com) WebRTC data channels in a star
-  topology — everyone connects to the host, who relays messages to all peers.
+  topology — everyone connects to the host player, who relays messages to all
+  peers. The signaling server only introduces peers to each other; no game or
+  chat data ever passes through it.
 - **Rooms**: host clicks *New game*, gets a 6-character code and a shareable
   `?join=CODE` link. First two arrivals are the players (host = White, second =
   Black); everyone after is a spectator. Spectators can chat and can spin up a
@@ -26,20 +38,20 @@ npx serve chess
   *Reconnect* button rejoins the same code once the host is back. Players who
   drop can reclaim their seat by rejoining with the same name.
 
-## Self-hosting the signaling server
+## Signaling config
 
-By default the app uses the free public PeerJS cloud for signaling. To use your
-own [PeerServer](https://github.com/peers/peerjs-server):
+Everything lives in the single `SIGNALING` constant at the top of `app.js`.
+The default points at the self-hosted PeerServer above. Notes:
 
-```
-npx peer --port 9000 --path /
-```
-
-Then edit the single `SIGNALING` constant at the top of `app.js`:
-
-```js
-const SIGNALING = { host: 'your-server.example.com', port: 9000, path: '/', secure: true };
-```
+- `config: { iceServers: [] }` means **no STUN/TURN at all** — pure P2P with
+  zero third-party servers. This works on a LAN or between machines that can
+  reach each other directly. To play across the internet through NATs, add
+  your own STUN/TURN server, e.g.
+  `config: { iceServers: [{ urls: 'stun:stun.example.com:3478' }] }`
+  (self-hostable with [coturn](https://github.com/coturn/coturn)).
+- To use the public PeerJS cloud instead, set `const SIGNALING = {};`.
+- For fully offline use, also vendor the two CDN scripts in `index.html`
+  (chess.js and peerjs) as local files.
 
 ## Security note
 
