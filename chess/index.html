@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>P2P Chess</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- chess.js 0.10.x (UMD build, exposes global `Chess`) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <!-- PeerJS: WebRTC data channels (DTLS-encrypted) + signaling client -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
+</head>
+<body>
+
+<!-- Entry overlay: pick a name, then host or join -->
+<div class="overlay" id="setup">
+  <div class="card">
+    <h1>♞ P2P Chess</h1>
+    <label>Your display name
+      <input id="nameInput" maxlength="24" placeholder="e.g. Magnus" autocomplete="off">
+    </label>
+    <div id="hostRow" class="row">
+      <button id="btnNew" class="primary">New game</button>
+    </div>
+    <div id="joinRow" class="row">
+      <input id="codeInput" maxlength="8" placeholder="Room code" autocomplete="off">
+      <button id="btnJoin">Join</button>
+    </div>
+    <p class="error" id="setupError" hidden></p>
+  </div>
+</div>
+
+<!-- Promotion picker -->
+<div class="overlay" id="promo" hidden>
+  <div class="card promo-card">
+    <p>Promote to:</p>
+    <div class="row">
+      <button data-p="q">♛</button><button data-p="r">♜</button>
+      <button data-p="b">♝</button><button data-p="n">♞</button>
+    </div>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <span class="brand">♞ P2P Chess</span>
+    <span class="room">Room <code id="roomLabel"></code>
+      <button id="btnCopy" title="Copy invite link">🔗 Copy link</button>
+    </span>
+    <button id="btnTheme" title="Toggle light/dark">🌓</button>
+  </header>
+
+  <div id="banner" class="banner" hidden>
+    <span id="bannerText"></span>
+    <button id="btnReconnect" hidden>Reconnect</button>
+  </div>
+
+  <main>
+    <section class="board-col">
+      <div class="status" id="statusBar"></div>
+      <div class="captured" id="capturedTop"></div>
+      <div id="board"></div>
+      <div class="captured" id="capturedBottom"></div>
+      <div class="actions">
+        <button id="btnResign" hidden>Resign</button>
+        <button id="btnDraw" hidden>Offer draw</button>
+        <button id="btnRematch" hidden>Rematch</button>
+        <button id="btnNewRoom" hidden>Start new game</button>
+      </div>
+    </section>
+
+    <aside>
+      <div class="panel">
+        <h2>Participants</h2>
+        <ul id="participants"></ul>
+      </div>
+      <div class="panel">
+        <h2>Moves</h2>
+        <div id="moveList" class="movelist"></div>
+      </div>
+      <div class="panel chat">
+        <h2>Chat</h2>
+        <div id="chatLog"></div>
+        <div class="row">
+          <input id="chatInput" maxlength="500" placeholder="Message…">
+          <button id="chatSend">Send</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

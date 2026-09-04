@@ -1,0 +1,145 @@
+/* ---------- Theme tokens ---------- */
+:root {
+  --bg: #f4f1ea; --panel: #ffffff; --text: #23201b; --muted: #7a746a;
+  --accent: #3d7dca; --border: #e0dcd2;
+  --sq-light: #f0d9b5; --sq-dark: #b58863;
+  --sel: rgba(61, 125, 202, .55); --last: rgba(205, 180, 60, .45);
+  --check: rgba(214, 69, 65, .65); --dot: rgba(0, 0, 0, .22);
+}
+:root[data-theme="dark"] {
+  --bg: #1c1b19; --panel: #26241f; --text: #eae6dd; --muted: #9a938a;
+  --accent: #6ea8e8; --border: #3a372f;
+  --sq-light: #9c8468; --sq-dark: #5d4a37;
+  --sel: rgba(110, 168, 232, .6); --last: rgba(205, 180, 60, .4);
+  --check: rgba(230, 90, 85, .65); --dot: rgba(255, 255, 255, .28);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+button {
+  font: inherit; color: var(--text); background: var(--panel);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 14px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+input {
+  font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px;
+  width: 100%;
+}
+h1 { font-size: 1.4em; margin: 0 0 12px; }
+h2 { font-size: .8em; text-transform: uppercase; letter-spacing: .06em;
+     color: var(--muted); margin: 0 0 8px; }
+a { color: var(--accent); }
+.row { display: flex; gap: 8px; margin-top: 10px; }
+.error { color: #d64541; font-size: .9em; }
+
+/* ---------- Overlays ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 10; display: flex;
+  align-items: center; justify-content: center; background: rgba(0, 0, 0, .45);
+}
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px; width: min(92vw, 340px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
+}
+.card label { display: block; font-size: .9em; color: var(--muted); }
+.card label input { margin-top: 5px; }
+.card .row button { flex: 1; }
+.promo-card { text-align: center; width: auto; }
+.promo-card button { font-size: 2em; line-height: 1; padding: 8px 14px; }
+
+/* ---------- Layout ---------- */
+header {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--panel);
+}
+.brand { font-weight: 700; }
+.room { margin-left: auto; display: flex; align-items: center; gap: 8px;
+        color: var(--muted); font-size: .95em; }
+.room code {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 2px 8px; font-weight: 700; color: var(--text);
+}
+.banner {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  background: #d64541; color: #fff; padding: 8px 16px; font-weight: 600;
+}
+main {
+  display: flex; gap: 18px; align-items: flex-start;
+  max-width: 1100px; margin: 18px auto; padding: 0 16px;
+}
+.board-col { flex: 1 1 auto; min-width: 0; }
+aside { flex: 0 0 300px; display: flex; flex-direction: column; gap: 14px; }
+.panel {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px;
+}
+
+/* ---------- Board ---------- */
+.status { text-align: center; font-weight: 600; margin-bottom: 6px; min-height: 1.4em; }
+.captured { min-height: 1.3em; font-size: 1.15em; text-align: center; color: var(--muted); }
+#board {
+  display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr);
+  width: min(88vw, 560px); aspect-ratio: 1; margin: 4px auto;
+  border: 4px solid var(--sq-dark); border-radius: 6px; overflow: hidden;
+  user-select: none;
+}
+.square { position: relative; display: flex; align-items: center; justify-content: center; }
+.square.light { background: var(--sq-light); }
+.square.dark { background: var(--sq-dark); }
+.square.last::before, .square.sel::before, .square.check::before {
+  content: ""; position: absolute; inset: 0;
+}
+.square.last::before { background: var(--last); }
+.square.sel::before { background: var(--sel); }
+.square.check::before { background: var(--check); }
+.piece {
+  position: relative; z-index: 1; font-size: 5.6vmin; line-height: 1; cursor: default;
+}
+@media (min-width: 700px) { .piece { font-size: 44px; } }
+.piece[draggable="true"] { cursor: grab; }
+.piece.w { color: #fdfdfa; text-shadow: 0 0 2px #333, 0 1px 2px rgba(0,0,0,.6); }
+.piece.b { color: #1b1b1b; text-shadow: 0 0 2px rgba(255,255,255,.35); }
+.dot, .ring { position: absolute; z-index: 2; pointer-events: none; border-radius: 50%; }
+.dot { width: 26%; height: 26%; background: var(--dot); }
+.ring { inset: 4%; border: 4px solid var(--dot); }
+.actions { display: flex; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+
+/* ---------- Panels ---------- */
+#participants { list-style: none; margin: 0; padding: 0; }
+#participants li { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.dot-conn { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.dot-conn.on { background: #35b06f; }
+.dot-conn.off { background: #999; }
+.chip {
+  margin-left: auto; font-size: .72em; text-transform: uppercase; letter-spacing: .04em;
+  padding: 2px 8px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted);
+}
+.chip.white { background: #f5f2ea; color: #444; }
+.chip.black { background: #333; color: #eee; border-color: #333; }
+.movelist {
+  max-height: 160px; overflow-y: auto; font-family: ui-monospace, monospace;
+  font-size: .9em; white-space: pre;
+}
+.chat #chatLog {
+  height: 230px; overflow-y: auto; display: flex; flex-direction: column;
+  gap: 6px; margin-bottom: 8px;
+}
+.msg { font-size: .92em; overflow-wrap: anywhere; }
+.msg .meta { display: block; font-size: .8em; color: var(--muted); }
+.msg.sys { color: var(--muted); font-style: italic; font-size: .85em; }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 860px) {
+  main { flex-direction: column; }
+  aside { flex: none; width: 100%; }
+}
