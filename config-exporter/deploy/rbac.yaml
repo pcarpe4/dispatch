@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: config-exporter
+  namespace: config-exporter
+---
+# Read-only access cluster-wide. `cluster-reader` is a built-in OpenShift role
+# that covers core + OpenShift kinds. Add rules to config-exporter-extra for
+# any CRDs it doesn't include.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: config-exporter-cluster-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-reader
+subjects:
+  - kind: ServiceAccount
+    name: config-exporter
+    namespace: config-exporter
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: config-exporter-extra
+rules: []
+  # Example: grant read on a custom CRD group you want to export.
+  # - apiGroups: ["example.com"]
+  #   resources: ["widgets"]
+  #   verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: config-exporter-extra
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: config-exporter-extra
+subjects:
+  - kind: ServiceAccount
+    name: config-exporter
+    namespace: config-exporter

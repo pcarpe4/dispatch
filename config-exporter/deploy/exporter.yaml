@@ -1,0 +1,72 @@
+# ---------------------------------------------------------------------------
+# Config exporter: add an entry under `exports` to export something new.
+# No code changes needed. ${VAR} is replaced from environment (use for secrets).
+# ---------------------------------------------------------------------------
+cluster: ${CLUSTER_NAME:-prod-east}
+
+defaults:
+  strip: [metadata.managedFields, "metadata.annotations[\"kubectl.kubernetes.io/last-applied-configuration\"]"]
+
+exports:
+  # 1) EVERYTHING: full YAML of every instance of a kind
+  - name: deployments-full
+    apiVersion: apps/v1
+    kind: Deployment
+
+  # 2) SPECIFIC FIELDS: only what you list (alias with `as`)
+  - name: routes
+    apiVersion: route.openshift.io/v1
+    kind: Route
+    fields:
+      - metadata.namespace
+      - metadata.name
+      - spec.host
+      - { path: spec.tls.termination, as: tls }
+
+  - name: container-images
+    apiVersion: apps/v1
+    kind: Deployment
+    namespaces: [payments, orders]          # scope to namespaces
+    labelSelector: "app.kubernetes.io/part-of=shop"
+    fields:
+      - metadata.name
+      - { path: "spec.template.spec.containers[*].image", as: images }
+      - { path: "metadata.labels[\"app.kubernetes.io/version\"]", as: version }
+
+  # 3) SPECIFIC INSTANCE: pin by name
+  - name: cluster-version
+    apiVersion: config.openshift.io/v1
+    kind: ClusterVersion
+    names: [version]
+    fields:
+      - status.desired.version
+      - spec.channel
+
+  - name: ingress-controller-default
+    apiVersion: operator.openshift.io/v1
+    kind: IngressController
+    namespaces: [openshift-ingress-operator]
+    names: [default]
+
+  - name: operators
+    apiVersion: operators.coreos.com/v1alpha1
+    kind: ClusterServiceVersion
+    fields: [metadata.namespace, metadata.name, spec.version, status.phase]
+    sinks: [db]                              # only send this one to the DB
+
+sinks:
+  - name: stdout
+    type: stdout
+
+  - name: api
+    type: http
+    url: https://cmdb.example.com/api/v1/ingest
+    headers:
+      Authorization: "Bearer ${API_TOKEN}"
+    batchSize: 500
+
+  - name: db
+    type: postgres
+    dsn: "postgresql://exporter:${PGPASSWORD}@postgres.cmdb.svc:5432/cmdb"
+    table: ocp_config
+    prune: true
