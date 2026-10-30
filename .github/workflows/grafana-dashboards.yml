@@ -1,0 +1,72 @@
+name: Grafana Dashboards
+
+# Pushes dashboard JSON under grafana/dashboards/ to a Grafana instance using
+# a service account token. Each sub-directory becomes a Grafana folder.
+#
+# Required repository/environment secrets:
+#   GRAFANA_URL             e.g. https://grafana.example.com
+#   GRAFANA_SA_TOKEN        Grafana service account token (Editor role or higher)
+# Optional repository/environment variables:
+#   GRAFANA_DATASOURCE_UID  default datasource uid for ${DS_*} inputs
+#   GRAFANA_ORG_ID          organisation id if not the default org
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "grafana/**"
+      - ".github/workflows/grafana-dashboards.yml"
+  pull_request:
+    paths:
+      - "grafana/**"
+      - ".github/workflows/grafana-dashboards.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub environment holding the Grafana secrets
+        type: string
+        default: production
+      dry_run:
+        description: Validate and plan without writing to Grafana
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: grafana-dashboards-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate dashboard JSON
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate
+        run: python3 grafana/scripts/push_dashboards.py --offline
+
+  deploy:
+    name: Push to Grafana
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    env:
+      GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
+      GRAFANA_SA_TOKEN: ${{ secrets.GRAFANA_SA_TOKEN }}
+      GRAFANA_ORG_ID: ${{ vars.GRAFANA_ORG_ID }}
+      GRAFANA_DATASOURCE_UID: ${{ vars.GRAFANA_DATASOURCE_UID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Push dashboards
+        run: |
+          python3 grafana/scripts/push_dashboards.py \
+            ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
