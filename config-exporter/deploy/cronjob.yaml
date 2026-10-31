@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: config-exporter
+  namespace: config-exporter
+spec:
+  schedule: "0 * * * *"            # hourly
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          serviceAccountName: config-exporter
+          restartPolicy: Never
+          containers:
+            - name: exporter
+              image: image-registry.openshift-image-registry.svc:5000/config-exporter/config-exporter:latest
+              env:
+                - name: CLUSTER_NAME
+                  value: prod-east
+              envFrom:
+                - secretRef:
+                    name: config-exporter-secrets
+                    optional: true
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+              resources:
+                requests: { cpu: 50m, memory: 128Mi }
+                limits: { memory: 512Mi }
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities: { drop: [ALL] }
+                runAsNonRoot: true
+          volumes:
+            - name: config
+              configMap:
+                name: config-exporter

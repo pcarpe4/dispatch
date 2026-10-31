@@ -1,0 +1,6 @@
+{
+  "name": "p2p-chess",
+  "private": true,
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "peer": "^1.0.2" }
+}

@@ -1,0 +1,95 @@
+name: CI
+
+# Lint and test everything in the repo on every push and pull request.
+# Each job is independent so one failing area doesn't hide the others.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    name: Shell scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: |
+          mapfile -t files < <(git ls-files '*.sh' 'scripts/multi-oc/bin/*')
+          printf '%s\n' "${files[@]}"
+          shellcheck -x -S warning "${files[@]}"
+
+  python:
+    name: Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: config-exporter/requirements.txt
+      - name: Syntax check all Python
+        run: python -m compileall -q .
+      - name: config-exporter tests
+        working-directory: config-exporter
+        run: |
+          pip install -r requirements.txt pytest
+          python -m pytest -q
+
+  manifests:
+    name: YAML / JSON / Helm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Parse YAML and JSON
+        run: |
+          pip install pyyaml
+          python - <<'PY'
+          import glob, json, sys, yaml
+          bad = 0
+          for f in glob.glob("**/*.y*ml", recursive=True):
+              if "/templates/" in f:  # Helm templates aren't plain YAML
+                  continue
+              try:
+                  list(yaml.safe_load_all(open(f)))
+              except Exception as e:
+                  print(f"::error file={f}::{e}"); bad += 1
+          for f in glob.glob("**/*.json", recursive=True):
+              if "node_modules" in f:
+                  continue
+              try:
+                  json.load(open(f))
+              except Exception as e:
+                  print(f"::error file={f}::{e}"); bad += 1
+          sys.exit(1 if bad else 0)
+          PY
+      - uses: azure/setup-helm@v4
+      - name: helm lint
+        run: helm lint compliance-agent/helm/compliance-chatbot
+      - name: kustomize build
+        run: kubectl kustomize config-exporter/deploy > /dev/null
+
+  node:
+    name: JavaScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Syntax check
+        run: |
+          for f in $(git ls-files '*.js'); do node --check "$f"; done

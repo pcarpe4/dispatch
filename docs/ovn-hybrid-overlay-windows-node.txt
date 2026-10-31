@@ -1,0 +1,125 @@
+OVN-Kubernetes Hybrid Overlay Setup for Windows Nodes
+======================================================
+
+This guide covers the oc commands to:
+  1. Verify your cluster uses the OVNKubernetes network type
+  2. Enable hybrid overlay on the cluster network so you can add Windows nodes
+
+Hybrid overlay (also called hybrid networking) allows OVN-Kubernetes to support
+both Linux and Windows nodes in the same cluster. It must be enabled before
+joining Windows worker nodes (via the Windows Machine Config Operator / WMCO).
+
+
+------------------------------------------------------------
+1. CHECK THAT THE CLUSTER USES OVNKubernetes
+------------------------------------------------------------
+
+# Show the configured network type (the default CNI). Expect: OVNKubernetes
+oc get network.config/cluster -o jsonpath='{.spec.networkType}{"\n"}'
+
+# Show the operator-level network type as well (should also be OVNKubernetes)
+oc get network.operator/cluster -o jsonpath='{.spec.defaultNetwork.type}{"\n"}'
+
+# Full default network configuration (useful for seeing current OVN settings)
+oc get network.operator/cluster -o yaml
+
+# Confirm the OVN-Kubernetes pods are running in the cluster
+oc get pods -n openshift-ovn-kubernetes
+
+# If networkType returns "OpenShiftSDN" you CANNOT use hybrid overlay this way.
+# Hybrid overlay for Windows nodes requires the OVNKubernetes CNI.
+
+
+------------------------------------------------------------
+2. CHECK WHETHER HYBRID OVERLAY IS ALREADY ENABLED
+------------------------------------------------------------
+
+# If this returns a hybridClusterNetwork block, hybrid overlay is already on.
+# If it returns nothing/empty, it is not yet configured.
+oc get network.operator/cluster \
+  -o jsonpath='{.spec.defaultNetwork.ovnKubernetesConfig.hybridOverlayConfig}{"\n"}'
+
+
+------------------------------------------------------------
+3. ENABLE HYBRID OVERLAY (PATCH THE NETWORK OPERATOR)
+------------------------------------------------------------
+
+# The Windows pod subnet (hybridClusterNetwork) MUST NOT overlap with:
+#   - the existing clusterNetwork CIDR
+#   - the serviceNetwork CIDR
+#   - any other host network in use.
+# Check your existing CIDRs first:
+oc get network.config/cluster -o jsonpath='CLUSTER: {.spec.clusterNetwork}{"\n"}SERVICE: {.spec.serviceNetwork}{"\n"}'
+
+# Patch the cluster network operator to enable hybrid overlay.
+# Adjust the cidr / hostPrefix to a non-overlapping range for your Windows nodes.
+oc patch network.operator.openshift.io/cluster --type=merge -p '{
+  "spec": {
+    "defaultNetwork": {
+      "ovnKubernetesConfig": {
+        "hybridOverlayConfig": {
+          "hybridClusterNetwork": [
+            {
+              "cidr": "10.132.0.0/14",
+              "hostPrefix": 23
+            }
+          ]
+        }
+      }
+    }
+  }
+}'
+
+# OPTIONAL: If your Windows VXLAN port (4789) conflicts with something else,
+# you can also set a custom hybridOverlayVXLANPort, e.g.:
+#
+# oc patch network.operator.openshift.io/cluster --type=merge -p '{
+#   "spec": {
+#     "defaultNetwork": {
+#       "ovnKubernetesConfig": {
+#         "hybridOverlayConfig": {
+#           "hybridClusterNetwork": [
+#             { "cidr": "10.132.0.0/14", "hostPrefix": 23 }
+#           ],
+#           "hybridOverlayVXLANPort": 9898
+#         }
+#       }
+#     }
+#   }
+# }'
+
+
+------------------------------------------------------------
+4. VERIFY THE CHANGE AND WAIT FOR ROLLOUT
+------------------------------------------------------------
+
+# Confirm the hybrid overlay config is now present
+oc get network.operator/cluster \
+  -o jsonpath='{.spec.defaultNetwork.ovnKubernetesConfig.hybridOverlayConfig}{"\n"}'
+
+# Watch the network cluster operator until it finishes progressing.
+# Wait for AVAILABLE=True, PROGRESSING=False, DEGRADED=False
+oc get clusteroperator network -w
+
+# Watch the OVN-Kubernetes pods roll out
+oc get pods -n openshift-ovn-kubernetes -w
+
+
+------------------------------------------------------------
+5. NEXT STEPS - ADDING THE WINDOWS NODE
+------------------------------------------------------------
+
+Once hybrid overlay is enabled and the network operator is healthy, install the
+Windows Machine Config Operator (WMCO) and create a Windows MachineSet (or use
+the BYOH ConfigMap for bring-your-own-host) to join Windows worker nodes.
+
+# After the Windows node joins, verify it is Ready:
+oc get nodes -l kubernetes.io/os=windows -o wide
+
+
+NOTES
+-----
+- Enabling hybrid overlay triggers a rollout of the OVN-Kubernetes components.
+- The hybridClusterNetwork CIDR cannot be changed without disruption later, so
+  pick the range carefully up front.
+- This must be done BEFORE adding Windows nodes to the cluster.
