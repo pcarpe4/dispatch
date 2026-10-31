@@ -1,0 +1,3 @@
+# Globals in bin/multi-oc are read by the sourced lib/*.sh files,
+# which shellcheck cannot follow through the dynamic source path.
+disable=SC2034

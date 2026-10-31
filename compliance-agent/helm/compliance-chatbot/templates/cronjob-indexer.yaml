@@ -1,0 +1,48 @@
+{{- if .Values.indexer.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "chatbot.fullname" . }}-indexer
+  labels:
+    {{- include "chatbot.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.indexer.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "chatbot.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: indexer
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: indexer
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["python", "-m", "indexer", "--source", "{{ .Values.indexer.source }}"]
+              env:
+                - name: INSTRUCTIONS_PATH
+                  value: /app/config/instructions.md
+                - name: SETTINGS_PATH
+                  value: /app/config/settings.yaml
+                {{- range $k, $v := .Values.env }}
+                - name: {{ $k }}
+                  value: {{ $v | quote }}
+                {{- end }}
+              envFrom:
+                - secretRef:
+                    name: {{ .Values.existingSecret }}
+              volumeMounts:
+                - name: config
+                  mountPath: /app/config
+              resources:
+                {{- toYaml .Values.indexer.resources | nindent 16 }}
+          volumes:
+            - name: config
+              configMap:
+                name: {{ include "chatbot.fullname" . }}-config
+{{- end }}

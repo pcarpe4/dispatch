@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# multi-oc - run an oc command against multiple OpenShift clusters.
+#
+# Clusters are defined in an input file (see clusters.conf.example).
+# Credentials are prompted interactively (password/token hidden, fed to
+# `oc login` via stdin) so they never appear in shell history or `ps`.
+#
+# Usage:
+#   multi-oc -f clusters.conf -- get nodes
+#   multi-oc -f clusters.conf --clusters prod,dr --parallel 4 -- get co
+#   multi-oc -f clusters.conf --token --output-dir ./reports -- get ns
+#
+# Everything after `--` is passed to oc verbatim.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$SCRIPT_DIR/../lib"
+
+# shellcheck source=../lib/log.sh
+source "$LIB_DIR/log.sh"
+# shellcheck source=../lib/config.sh
+source "$LIB_DIR/config.sh"
+# shellcheck source=../lib/auth.sh
+source "$LIB_DIR/auth.sh"
+# shellcheck source=../lib/exec.sh
+source "$LIB_DIR/exec.sh"
+
+usage() {
+  cat <<'EOF'
+multi-oc - run an oc command against multiple OpenShift clusters
+
+Usage:
+  multi-oc -f <cluster-file> [options] -- <oc args...>
+
+Options:
+  -f, --file FILE        Cluster input file (required).
+  -c, --clusters LIST    Comma-separated subset of cluster names to target.
+  -p, --parallel N       Run up to N clusters concurrently (default: 1).
+  -o, --output-dir DIR   Write per-cluster output to DIR/<name>.out|.err
+                         instead of streaming to the terminal.
+  -t, --token            Authenticate with an API token instead of
+                         username/password.
+      --keep-login       Skip `oc logout` on exit (sessions stay valid
+                         server-side until they expire).
+  -h, --help             Show this help.
+
+Examples:
+  multi-oc -f clusters.conf -- get nodes
+  multi-oc -f clusters.conf -c prod,dr -p 4 -- get clusteroperators
+  multi-oc -f clusters.conf -o ./reports -- get pods -A -o json
+
+Credentials are prompted once and reused for every cluster. The password
+(or token) is hidden while typing and is passed to `oc login` on stdin,
+so it never appears in shell history, process listings, or on disk.
+EOF
+}
+
+CLUSTER_FILE=""
+CLUSTER_SUBSET=""
+PARALLEL=1
+OUTPUT_DIR=""
+AUTH_MODE="password"
+KEEP_LOGIN=0
+declare -a OC_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -f|--file)        CLUSTER_FILE="${2:?missing argument for $1}"; shift 2 ;;
+    -c|--clusters)    CLUSTER_SUBSET="${2:?missing argument for $1}"; shift 2 ;;
+    -p|--parallel)    PARALLEL="${2:?missing argument for $1}"; shift 2 ;;
+    -o|--output-dir)  OUTPUT_DIR="${2:?missing argument for $1}"; shift 2 ;;
+    -t|--token)       AUTH_MODE="token"; shift ;;
+    --keep-login)     KEEP_LOGIN=1; shift ;;
+    -h|--help)        usage; exit 0 ;;
+    --)               shift; OC_ARGS=("$@"); break ;;
+    *)                die "unknown option: $1 (use --help)" ;;
+  esac
+done
+
+[[ -n "$CLUSTER_FILE" ]]      || { usage >&2; die "cluster file is required (-f)"; }
+[[ ${#OC_ARGS[@]} -gt 0 ]]    || { usage >&2; die "no oc command given (put it after --)"; }
+[[ "$PARALLEL" =~ ^[1-9][0-9]*$ ]] || die "--parallel must be a positive integer"
+command -v oc >/dev/null      || die "oc binary not found in PATH"
+
+config_load "$CLUSTER_FILE"
+[[ -n "$CLUSTER_SUBSET" ]] && config_select "$CLUSTER_SUBSET"
+
+# Isolated kubeconfigs, wiped on exit.
+KUBECONFIG_DIR="$(mktemp -d)"
+chmod 700 "$KUBECONFIG_DIR"
+cleanup() {
+  [[ "$KEEP_LOGIN" == 1 ]] || auth_logout_all
+  rm -rf "$KUBECONFIG_DIR"
+}
+trap cleanup EXIT
+
+log_info "targets: ${CLUSTER_NAMES[*]}"
+auth_prompt
+
+login_failures=0
+for name in "${CLUSTER_NAMES[@]}"; do
+  auth_login "$name" || login_failures=$((login_failures + 1))
+done
+auth_scrub
+
+if [[ $login_failures -eq ${#CLUSTER_NAMES[@]} ]]; then
+  die "login failed for all clusters; aborting"
+fi
+
+log_info "running: oc ${OC_ARGS[*]}"
+exec_all
+
+if [[ ${#FAILED_CLUSTERS[@]} -gt 0 ]]; then
+  log_warn "failed clusters: ${FAILED_CLUSTERS[*]}"
+  exit 1
+fi
+log_ok "all clusters succeeded"

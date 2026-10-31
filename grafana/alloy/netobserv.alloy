@@ -1,0 +1,42 @@
+// ---- NetObserv (flowlogs-pipeline) metrics via ServiceMonitor CRDs ----
+//
+// NetObserv ships flowlogs-pipeline metrics through a ServiceMonitor, so
+// `prometheus.operator.servicemonitors` discovers the FLP targets directly
+// from the stock CRD in the `netobserv` namespace.
+prometheus.operator.servicemonitors "netobserv_flp" {
+  forward_to = [prometheus.relabel.netobserv_flp.receiver]
+  clustering {
+    enabled = true
+  }
+  namespaces = ["netobserv"]
+}
+
+prometheus.relabel "netobserv_flp" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+
+  rule {
+    action        = "replace"
+    source_labels = ["job"]
+    target_label  = "job"
+    replacement   = "integrations/netobserv/flowlogs-pipeline"
+  }
+
+  // Replicate the ServiceMonitor's metricRelabelings: derive `namespace`
+  // from Dst/Src K8S namespace on ingress/egress series.
+  rule {
+    source_labels = ["__name__", "DstK8S_Namespace"]
+    separator     = "@"
+    regex         = "netobserv_(workload|namespace)_ingress_.*@(.*)"
+    target_label  = "namespace"
+    replacement   = "${2}"
+    action        = "replace"
+  }
+  rule {
+    source_labels = ["__name__", "SrcK8S_Namespace"]
+    separator     = "@"
+    regex         = "netobserv_(workload|namespace)_(egress|flows|drop|rtt|dns)_.*@(.*)"
+    target_label  = "namespace"
+    replacement   = "${3}"
+    action        = "replace"
+  }
+}
