@@ -44,7 +44,7 @@ jobs:
         working-directory: config-exporter
         run: |
           pip install -r requirements.txt pytest
-          pytest -q
+          python -m pytest -q
 
   manifests:
     name: YAML / JSON / Helm
