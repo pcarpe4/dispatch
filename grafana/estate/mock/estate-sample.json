@@ -1,0 +1,1643 @@
+{
+ "nodes": [
+  {
+   "id": "dc-east",
+   "type": "datacenter",
+   "name": "East DC",
+   "region": "us-east",
+   "site_code": "EAST1",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "dc-west",
+   "type": "datacenter",
+   "name": "West DC",
+   "region": "us-west",
+   "site_code": "WEST1",
+   "datacenter": "dc-west"
+  },
+  {
+   "id": "zone-east-dmz",
+   "type": "zone",
+   "name": "east-dmz",
+   "security_tier": "dmz",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "zone-east-prod",
+   "type": "zone",
+   "name": "east-prod",
+   "security_tier": "internal",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "zone-west-prod",
+   "type": "zone",
+   "name": "west-prod",
+   "security_tier": "internal",
+   "datacenter": "dc-west"
+  },
+  {
+   "id": "fw-east-core",
+   "type": "firewall",
+   "name": "fw-east-core",
+   "vendor": "Palo Alto",
+   "model": "PA-5450",
+   "version": "11.1.4",
+   "status": "active",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "fw-west-core",
+   "type": "firewall",
+   "name": "fw-west-core",
+   "vendor": "Fortinet",
+   "model": "FortiGate 3000D",
+   "version": "7.4.3",
+   "status": "active",
+   "datacenter": "dc-west"
+  },
+  {
+   "id": "rack-e01",
+   "type": "hardware_group",
+   "name": "rack-E01",
+   "location": "row 3, position 1",
+   "power_kw": 12.5,
+   "datacenter": "dc-east",
+   "host_count": 3
+  },
+  {
+   "id": "rack-e02",
+   "type": "hardware_group",
+   "name": "rack-E02",
+   "location": "row 3, position 2",
+   "power_kw": 14.0,
+   "datacenter": "dc-east",
+   "host_count": 3
+  },
+  {
+   "id": "rack-w01",
+   "type": "hardware_group",
+   "name": "rack-W01",
+   "location": "row 1, position 4",
+   "power_kw": 9.0,
+   "datacenter": "dc-west",
+   "host_count": 2
+  },
+  {
+   "id": "subnet-east-dmz",
+   "type": "subnet",
+   "name": "east-dmz",
+   "cidr": "10.10.50.0/24",
+   "vlan": 150,
+   "datacenter": "dc-east",
+   "host_count": 1
+  },
+  {
+   "id": "subnet-east-prod-bm",
+   "type": "subnet",
+   "name": "east-prod-baremetal",
+   "cidr": "10.10.2.0/24",
+   "vlan": 102,
+   "datacenter": "dc-east",
+   "host_count": 3
+  },
+  {
+   "id": "subnet-east-prod-compute",
+   "type": "subnet",
+   "name": "east-prod-compute",
+   "cidr": "10.10.1.0/24",
+   "vlan": 101,
+   "datacenter": "dc-east",
+   "host_count": 10
+  },
+  {
+   "id": "subnet-west-prod-compute",
+   "type": "subnet",
+   "name": "west-prod-compute",
+   "cidr": "10.20.1.0/24",
+   "vlan": 201,
+   "datacenter": "dc-west",
+   "host_count": 7
+  },
+  {
+   "id": "vsan-east-prod",
+   "type": "vsphere_cluster",
+   "name": "vsan-east-prod",
+   "vcenter": "vc-east.example.com",
+   "version": "8.0.3",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "vsan-west-prod",
+   "type": "vsphere_cluster",
+   "name": "vsan-west-prod",
+   "vcenter": "vc-west.example.com",
+   "version": "8.0.2",
+   "datacenter": "dc-west"
+  },
+  {
+   "id": "esx-e01",
+   "type": "esxi_host",
+   "name": "esx-e01",
+   "vendor": "Dell",
+   "model": "PowerEdge R760",
+   "os": "VMware ESXi 8.0 U3",
+   "ip": "10.10.1.11",
+   "cpu_cores": 64,
+   "mem_gb": 1024,
+   "cpu_used_pct": 75,
+   "mem_used_pct": 52,
+   "status": "connected",
+   "datacenter": "dc-east",
+   "vm_count": 2
+  },
+  {
+   "id": "esx-e02",
+   "type": "esxi_host",
+   "name": "esx-e02",
+   "vendor": "Dell",
+   "model": "PowerEdge R760",
+   "os": "VMware ESXi 8.0 U3",
+   "ip": "10.10.1.12",
+   "cpu_cores": 64,
+   "mem_gb": 1024,
+   "cpu_used_pct": 36,
+   "mem_used_pct": 62,
+   "status": "connected",
+   "datacenter": "dc-east",
+   "vm_count": 2
+  },
+  {
+   "id": "esx-e03",
+   "type": "esxi_host",
+   "name": "esx-e03",
+   "vendor": "Dell",
+   "model": "PowerEdge R760",
+   "os": "VMware ESXi 8.0 U3",
+   "ip": "10.10.1.13",
+   "cpu_cores": 64,
+   "mem_gb": 1024,
+   "cpu_used_pct": 50,
+   "mem_used_pct": 59,
+   "status": "connected",
+   "datacenter": "dc-east",
+   "vm_count": 4
+  },
+  {
+   "id": "esx-w01",
+   "type": "esxi_host",
+   "name": "esx-w01",
+   "vendor": "Cisco",
+   "model": "UCS C240 M7",
+   "os": "VMware ESXi 8.0 U2",
+   "ip": "10.20.1.11",
+   "cpu_cores": 56,
+   "mem_gb": 768,
+   "cpu_used_pct": 47,
+   "mem_used_pct": 73,
+   "status": "connected",
+   "datacenter": "dc-west",
+   "vm_count": 3
+  },
+  {
+   "id": "esx-w02",
+   "type": "esxi_host",
+   "name": "esx-w02",
+   "vendor": "Cisco",
+   "model": "UCS C240 M7",
+   "os": "VMware ESXi 8.0 U2",
+   "ip": "10.20.1.12",
+   "cpu_cores": 56,
+   "mem_gb": 768,
+   "cpu_used_pct": 41,
+   "mem_used_pct": 37,
+   "status": "connected",
+   "datacenter": "dc-west",
+   "vm_count": 2
+  },
+  {
+   "id": "bm-e01",
+   "type": "baremetal_host",
+   "name": "bm-e01",
+   "vendor": "HPE",
+   "model": "ProLiant DL380 Gen11",
+   "os": "RHCOS 4.15",
+   "ip": "10.10.2.21",
+   "cpu_cores": 96,
+   "mem_gb": 768,
+   "cpu_used_pct": 38,
+   "mem_used_pct": 46,
+   "status": "powered_on",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "bm-e02",
+   "type": "baremetal_host",
+   "name": "bm-e02",
+   "vendor": "HPE",
+   "model": "ProLiant DL380 Gen11",
+   "os": "RHCOS 4.15",
+   "ip": "10.10.2.22",
+   "cpu_cores": 96,
+   "mem_gb": 768,
+   "cpu_used_pct": 64,
+   "mem_used_pct": 45,
+   "status": "powered_on",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "bm-e03",
+   "type": "baremetal_host",
+   "name": "bm-e03",
+   "vendor": "HPE",
+   "model": "ProLiant DL380 Gen11",
+   "os": "RHCOS 4.15",
+   "ip": "10.10.2.23",
+   "cpu_cores": 96,
+   "mem_gb": 768,
+   "cpu_used_pct": 67,
+   "mem_used_pct": 67,
+   "status": "powered_on",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "vm-files-east-01",
+   "type": "vm",
+   "name": "files-east-01",
+   "os": "Windows Server 2019",
+   "role": "standalone",
+   "status": "poweredOn",
+   "ip": "10.10.1.41",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 15,
+   "mem_used_pct": 38,
+   "app": "file-services",
+   "owner_team": "platform",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "vm-jump-east-01",
+   "type": "vm",
+   "name": "jump-east-01",
+   "os": "RHEL 9.4",
+   "role": "standalone",
+   "status": "poweredOn",
+   "ip": "10.10.50.5",
+   "cpu_cores": 2,
+   "mem_gb": 8,
+   "cpu_used_pct": 4,
+   "mem_used_pct": 26,
+   "app": "bastion",
+   "owner_team": "security",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "vm-ocp-vs-east-k7x2p-master-0",
+   "type": "vm",
+   "name": "ocp-vs-east-k7x2p-master-0",
+   "os": "RHCOS 4.16",
+   "role": "ocp-node",
+   "status": "poweredOn",
+   "ip": "10.10.1.30",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 22,
+   "mem_used_pct": 31,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east"
+  },
+  {
+   "id": "vm-ocp-vs-east-k7x2p-master-1",
+   "type": "vm",
+   "name": "ocp-vs-east-k7x2p-master-1",
+   "os": "RHCOS 4.16",
+   "role": "ocp-node",
+   "status": "poweredOn",
+   "ip": "10.10.1.32",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 55,
+   "mem_used_pct": 42,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east"
+  },
+  {
+   "id": "vm-ocp-vs-east-k7x2p-master-2",
+   "type": "vm",
+   "name": "ocp-vs-east-k7x2p-master-2",
+   "os": "RHCOS 4.16",
+   "role": "ocp-node",
+   "status": "poweredOn",
+   "ip": "10.10.1.34",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 48,
+   "mem_used_pct": 67,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east"
+  },
+  {
+   "id": "vm-ocp-vs-east-k7x2p-worker-0",
+   "type": "vm",
+   "name": "ocp-vs-east-k7x2p-worker-0",
+   "os": "RHCOS 4.16",
+   "role": "ocp-node",
+   "status": "poweredOn",
+   "ip": "10.10.1.31",
+   "cpu_cores": 16,
+   "mem_gb": 64,
+   "cpu_used_pct": 34,
+   "mem_used_pct": 62,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east"
+  },
+  {
+   "id": "vm-ocp-vs-east-k7x2p-worker-1",
+   "type": "vm",
+   "name": "ocp-vs-east-k7x2p-worker-1",
+   "os": "RHCOS 4.16",
+   "role": "ocp-node",
+   "status": "poweredOn",
+   "ip": "10.10.1.33",
+   "cpu_cores": 16,
+   "mem_gb": 64,
+   "cpu_used_pct": 64,
+   "mem_used_pct": 64,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east"
+  },
+  {
+   "id": "vm-ocp-vs-west-q9m4r-master-0",
+   "type": "vm",
+   "name": "ocp-vs-west-q9m4r-master-0",
+   "os": "RHCOS 4.16",
+   "role": "ocp-node",
+   "status": "poweredOn",
+   "ip": "10.20.1.30",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 66,
+   "mem_used_pct": 59,
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west"
+  },
+  {
+   "id": "vm-ocp-vs-west-q9m4r-master-1",
+   "type": "vm",
+   "name": "ocp-vs-west-q9m4r-master-1",
+   "os": "RHCOS 4.16",
+   "role": "ocp-node",
+   "status": "poweredOn",
+   "ip": "10.20.1.31",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 44,
+   "mem_used_pct": 35,
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west"
+  },
+  {
+   "id": "vm-ocp-vs-west-q9m4r-master-2",
+   "type": "vm",
+   "name": "ocp-vs-west-q9m4r-master-2",
+   "os": "RHCOS 4.16",
+   "role": "ocp-node",
+   "status": "poweredOn",
+   "ip": "10.20.1.33",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 32,
+   "mem_used_pct": 75,
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west"
+  },
+  {
+   "id": "vm-ocp-vs-west-q9m4r-worker-0",
+   "type": "vm",
+   "name": "ocp-vs-west-q9m4r-worker-0",
+   "os": "RHCOS 4.16",
+   "role": "ocp-node",
+   "status": "poweredOn",
+   "ip": "10.20.1.32",
+   "cpu_cores": 16,
+   "mem_gb": 64,
+   "cpu_used_pct": 60,
+   "mem_used_pct": 69,
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west"
+  },
+  {
+   "id": "vm-sql-east-01",
+   "type": "vm",
+   "name": "sql-east-01",
+   "os": "Windows Server 2022",
+   "role": "standalone",
+   "status": "poweredOn",
+   "ip": "10.10.1.40",
+   "cpu_cores": 8,
+   "mem_gb": 64,
+   "cpu_used_pct": 30,
+   "mem_used_pct": 77,
+   "app": "erp-db",
+   "owner_team": "dba",
+   "datacenter": "dc-east"
+  },
+  {
+   "id": "vm-sql-west-01",
+   "type": "vm",
+   "name": "sql-west-01",
+   "os": "Windows Server 2022",
+   "role": "standalone",
+   "status": "poweredOn",
+   "ip": "10.20.1.40",
+   "cpu_cores": 8,
+   "mem_gb": 64,
+   "cpu_used_pct": 34,
+   "mem_used_pct": 68,
+   "app": "erp-db",
+   "owner_team": "dba",
+   "datacenter": "dc-west"
+  },
+  {
+   "id": "ocp-bm-east",
+   "type": "ocp_cluster",
+   "name": "ocp-bm-east",
+   "platform": "baremetal",
+   "version": "4.15.30",
+   "env": "prod",
+   "status": "healthy",
+   "datacenter": "dc-east",
+   "node_count": 3,
+   "pod_count": 5,
+   "cpu_cores": 288,
+   "mem_gb": 2304,
+   "cpu_used_pct": 41,
+   "mem_used_pct": 57
+  },
+  {
+   "id": "ocp-vs-east",
+   "type": "ocp_cluster",
+   "name": "ocp-vs-east",
+   "platform": "vsphere",
+   "version": "4.16.12",
+   "env": "prod",
+   "status": "healthy",
+   "datacenter": "dc-east",
+   "node_count": 5,
+   "pod_count": 6,
+   "cpu_cores": 44,
+   "mem_gb": 176,
+   "cpu_used_pct": 46,
+   "mem_used_pct": 44
+  },
+  {
+   "id": "ocp-vs-west",
+   "type": "ocp_cluster",
+   "name": "ocp-vs-west",
+   "platform": "vsphere",
+   "version": "4.16.12",
+   "env": "prod",
+   "status": "degraded",
+   "datacenter": "dc-west",
+   "node_count": 4,
+   "pod_count": 2,
+   "cpu_cores": 28,
+   "mem_gb": 112,
+   "cpu_used_pct": 44,
+   "mem_used_pct": 46
+  },
+  {
+   "id": "node-ocp-vs-east-master-0",
+   "type": "ocp_node",
+   "name": "master-0",
+   "role": "master",
+   "os": "RHCOS 4.16",
+   "version": "v1.29.8",
+   "status": "Ready",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 25,
+   "mem_used_pct": 43,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east"
+  },
+  {
+   "id": "node-ocp-bm-east-master-0",
+   "type": "ocp_node",
+   "name": "master-0",
+   "role": "master",
+   "os": "RHCOS 4.15",
+   "version": "v1.28.13",
+   "status": "Ready",
+   "cpu_cores": 96,
+   "mem_gb": 768,
+   "cpu_used_pct": 51,
+   "mem_used_pct": 46,
+   "datacenter": "dc-east",
+   "cluster": "ocp-bm-east"
+  },
+  {
+   "id": "node-ocp-vs-west-master-0",
+   "type": "ocp_node",
+   "name": "master-0",
+   "role": "master",
+   "os": "RHCOS 4.16",
+   "version": "v1.29.8",
+   "status": "Ready",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 54,
+   "mem_used_pct": 37,
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west"
+  },
+  {
+   "id": "node-ocp-vs-east-master-1",
+   "type": "ocp_node",
+   "name": "master-1",
+   "role": "master",
+   "os": "RHCOS 4.16",
+   "version": "v1.29.8",
+   "status": "Ready",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 65,
+   "mem_used_pct": 71,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east"
+  },
+  {
+   "id": "node-ocp-bm-east-master-1",
+   "type": "ocp_node",
+   "name": "master-1",
+   "role": "master",
+   "os": "RHCOS 4.15",
+   "version": "v1.28.13",
+   "status": "Ready",
+   "cpu_cores": 96,
+   "mem_gb": 768,
+   "cpu_used_pct": 35,
+   "mem_used_pct": 64,
+   "datacenter": "dc-east",
+   "cluster": "ocp-bm-east"
+  },
+  {
+   "id": "node-ocp-vs-west-master-1",
+   "type": "ocp_node",
+   "name": "master-1",
+   "role": "master",
+   "os": "RHCOS 4.16",
+   "version": "v1.29.8",
+   "status": "Ready",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 55,
+   "mem_used_pct": 48,
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west"
+  },
+  {
+   "id": "node-ocp-vs-east-master-2",
+   "type": "ocp_node",
+   "name": "master-2",
+   "role": "master",
+   "os": "RHCOS 4.16",
+   "version": "v1.29.8",
+   "status": "Ready",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 37,
+   "mem_used_pct": 30,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east"
+  },
+  {
+   "id": "node-ocp-bm-east-master-2",
+   "type": "ocp_node",
+   "name": "master-2",
+   "role": "master",
+   "os": "RHCOS 4.15",
+   "version": "v1.28.13",
+   "status": "Ready",
+   "cpu_cores": 96,
+   "mem_gb": 768,
+   "cpu_used_pct": 36,
+   "mem_used_pct": 62,
+   "datacenter": "dc-east",
+   "cluster": "ocp-bm-east"
+  },
+  {
+   "id": "node-ocp-vs-west-master-2",
+   "type": "ocp_node",
+   "name": "master-2",
+   "role": "master",
+   "os": "RHCOS 4.16",
+   "version": "v1.29.8",
+   "status": "NotReady",
+   "cpu_cores": 4,
+   "mem_gb": 16,
+   "cpu_used_pct": 24,
+   "mem_used_pct": 32,
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west"
+  },
+  {
+   "id": "node-ocp-vs-east-worker-0",
+   "type": "ocp_node",
+   "name": "worker-0",
+   "role": "worker",
+   "os": "RHCOS 4.16",
+   "version": "v1.29.8",
+   "status": "Ready",
+   "cpu_cores": 16,
+   "mem_gb": 64,
+   "cpu_used_pct": 58,
+   "mem_used_pct": 31,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east"
+  },
+  {
+   "id": "node-ocp-vs-west-worker-0",
+   "type": "ocp_node",
+   "name": "worker-0",
+   "role": "worker",
+   "os": "RHCOS 4.16",
+   "version": "v1.29.8",
+   "status": "Ready",
+   "cpu_cores": 16,
+   "mem_gb": 64,
+   "cpu_used_pct": 43,
+   "mem_used_pct": 66,
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west"
+  },
+  {
+   "id": "node-ocp-vs-east-worker-1",
+   "type": "ocp_node",
+   "name": "worker-1",
+   "role": "worker",
+   "os": "RHCOS 4.16",
+   "version": "v1.29.8",
+   "status": "Ready",
+   "cpu_cores": 16,
+   "mem_gb": 64,
+   "cpu_used_pct": 46,
+   "mem_used_pct": 44,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east"
+  },
+  {
+   "id": "ns-ocp-vs-east-inventory",
+   "type": "namespace",
+   "name": "inventory",
+   "app": "inventory-api",
+   "owner_team": "supply-chain",
+   "env": "prod",
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east",
+   "pod_count": 3
+  },
+  {
+   "id": "ns-ocp-bm-east-ml-platform",
+   "type": "namespace",
+   "name": "ml-platform",
+   "app": "ml-platform",
+   "owner_team": "data-science",
+   "env": "prod",
+   "datacenter": "dc-east",
+   "cluster": "ocp-bm-east",
+   "pod_count": 3
+  },
+  {
+   "id": "ns-ocp-vs-east-payments",
+   "type": "namespace",
+   "name": "payments",
+   "app": "payments-api",
+   "owner_team": "payments",
+   "env": "prod",
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east",
+   "pod_count": 3
+  },
+  {
+   "id": "ns-ocp-bm-east-payments",
+   "type": "namespace",
+   "name": "payments",
+   "app": "payments-api",
+   "owner_team": "payments",
+   "env": "prod",
+   "datacenter": "dc-east",
+   "cluster": "ocp-bm-east",
+   "pod_count": 2
+  },
+  {
+   "id": "ns-ocp-vs-west-payments",
+   "type": "namespace",
+   "name": "payments",
+   "app": "payments-api",
+   "owner_team": "payments",
+   "env": "prod",
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west",
+   "pod_count": 2
+  },
+  {
+   "id": "pod-ocp-vs-east-inventory-inventory-api-66d4c9-jkl78",
+   "type": "pod",
+   "name": "inventory-api-66d4c9-jkl78",
+   "app": "inventory-api",
+   "status": "Running",
+   "cpu_request_m": 1000,
+   "mem_request_mb": 512,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east",
+   "namespace": "inventory"
+  },
+  {
+   "id": "pod-ocp-vs-east-inventory-inventory-api-66d4c9-mno90",
+   "type": "pod",
+   "name": "inventory-api-66d4c9-mno90",
+   "app": "inventory-api",
+   "status": "Running",
+   "cpu_request_m": 1000,
+   "mem_request_mb": 1024,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east",
+   "namespace": "inventory"
+  },
+  {
+   "id": "pod-ocp-vs-east-inventory-inventory-db-0",
+   "type": "pod",
+   "name": "inventory-db-0",
+   "app": "inventory-api",
+   "status": "Running",
+   "cpu_request_m": 500,
+   "mem_request_mb": 1024,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east",
+   "namespace": "inventory"
+  },
+  {
+   "id": "pod-ocp-bm-east-ml-platform-model-serving-fraud-v3-0",
+   "type": "pod",
+   "name": "model-serving-fraud-v3-0",
+   "app": "ml-platform",
+   "status": "Running",
+   "cpu_request_m": 1000,
+   "mem_request_mb": 512,
+   "datacenter": "dc-east",
+   "cluster": "ocp-bm-east",
+   "namespace": "ml-platform"
+  },
+  {
+   "id": "pod-ocp-bm-east-ml-platform-model-serving-fraud-v3-1",
+   "type": "pod",
+   "name": "model-serving-fraud-v3-1",
+   "app": "ml-platform",
+   "status": "Running",
+   "cpu_request_m": 1000,
+   "mem_request_mb": 256,
+   "datacenter": "dc-east",
+   "cluster": "ocp-bm-east",
+   "namespace": "ml-platform"
+  },
+  {
+   "id": "pod-ocp-bm-east-ml-platform-notebook-controller-5f6d7e-vwx56",
+   "type": "pod",
+   "name": "notebook-controller-5f6d7e-vwx56",
+   "app": "ml-platform",
+   "status": "Running",
+   "cpu_request_m": 2000,
+   "mem_request_mb": 4096,
+   "datacenter": "dc-east",
+   "cluster": "ocp-bm-east",
+   "namespace": "ml-platform"
+  },
+  {
+   "id": "pod-ocp-vs-east-payments-payments-api-7d9f8b-abc12",
+   "type": "pod",
+   "name": "payments-api-7d9f8b-abc12",
+   "app": "payments-api",
+   "status": "Running",
+   "cpu_request_m": 250,
+   "mem_request_mb": 512,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east",
+   "namespace": "payments"
+  },
+  {
+   "id": "pod-ocp-vs-west-payments-payments-api-7d9f8b-bcd90",
+   "type": "pod",
+   "name": "payments-api-7d9f8b-bcd90",
+   "app": "payments-api",
+   "status": "Running",
+   "cpu_request_m": 1000,
+   "mem_request_mb": 4096,
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west",
+   "namespace": "payments"
+  },
+  {
+   "id": "pod-ocp-vs-east-payments-payments-api-7d9f8b-def34",
+   "type": "pod",
+   "name": "payments-api-7d9f8b-def34",
+   "app": "payments-api",
+   "status": "Running",
+   "cpu_request_m": 250,
+   "mem_request_mb": 4096,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east",
+   "namespace": "payments"
+  },
+  {
+   "id": "pod-ocp-bm-east-payments-payments-api-7d9f8b-pqr12",
+   "type": "pod",
+   "name": "payments-api-7d9f8b-pqr12",
+   "app": "payments-api",
+   "status": "Running",
+   "cpu_request_m": 250,
+   "mem_request_mb": 512,
+   "datacenter": "dc-east",
+   "cluster": "ocp-bm-east",
+   "namespace": "payments"
+  },
+  {
+   "id": "pod-ocp-bm-east-payments-payments-api-7d9f8b-stu34",
+   "type": "pod",
+   "name": "payments-api-7d9f8b-stu34",
+   "app": "payments-api",
+   "status": "Running",
+   "cpu_request_m": 500,
+   "mem_request_mb": 512,
+   "datacenter": "dc-east",
+   "cluster": "ocp-bm-east",
+   "namespace": "payments"
+  },
+  {
+   "id": "pod-ocp-vs-west-payments-payments-api-7d9f8b-yza78",
+   "type": "pod",
+   "name": "payments-api-7d9f8b-yza78",
+   "app": "payments-api",
+   "status": "Running",
+   "cpu_request_m": 500,
+   "mem_request_mb": 256,
+   "datacenter": "dc-west",
+   "cluster": "ocp-vs-west",
+   "namespace": "payments"
+  },
+  {
+   "id": "pod-ocp-vs-east-payments-payments-worker-5c8b7d-ghi56",
+   "type": "pod",
+   "name": "payments-worker-5c8b7d-ghi56",
+   "app": "payments-api",
+   "status": "Running",
+   "cpu_request_m": 1000,
+   "mem_request_mb": 4096,
+   "datacenter": "dc-east",
+   "cluster": "ocp-vs-east",
+   "namespace": "payments"
+  }
+ ],
+ "edges": [
+  {
+   "id": "contains:dc-east>zone-east-prod",
+   "source": "dc-east",
+   "target": "zone-east-prod",
+   "relation": "contains"
+  },
+  {
+   "id": "contains:dc-east>zone-east-dmz",
+   "source": "dc-east",
+   "target": "zone-east-dmz",
+   "relation": "contains"
+  },
+  {
+   "id": "contains:zone-east-prod>subnet-east-prod-compute",
+   "source": "zone-east-prod",
+   "target": "subnet-east-prod-compute",
+   "relation": "contains"
+  },
+  {
+   "id": "contains:zone-east-prod>subnet-east-prod-bm",
+   "source": "zone-east-prod",
+   "target": "subnet-east-prod-bm",
+   "relation": "contains"
+  },
+  {
+   "id": "contains:zone-east-dmz>subnet-east-dmz",
+   "source": "zone-east-dmz",
+   "target": "subnet-east-dmz",
+   "relation": "contains"
+  },
+  {
+   "id": "contains:dc-east>fw-east-core",
+   "source": "dc-east",
+   "target": "fw-east-core",
+   "relation": "contains"
+  },
+  {
+   "id": "protects:fw-east-core>subnet-east-prod-compute",
+   "source": "fw-east-core",
+   "target": "subnet-east-prod-compute",
+   "relation": "protects"
+  },
+  {
+   "id": "protects:fw-east-core>subnet-east-prod-bm",
+   "source": "fw-east-core",
+   "target": "subnet-east-prod-bm",
+   "relation": "protects"
+  },
+  {
+   "id": "protects:fw-east-core>subnet-east-dmz",
+   "source": "fw-east-core",
+   "target": "subnet-east-dmz",
+   "relation": "protects"
+  },
+  {
+   "id": "contains:dc-east>rack-e01",
+   "source": "dc-east",
+   "target": "rack-e01",
+   "relation": "contains"
+  },
+  {
+   "id": "contains:dc-east>rack-e02",
+   "source": "dc-east",
+   "target": "rack-e02",
+   "relation": "contains"
+  },
+  {
+   "id": "contains:dc-east>vsan-east-prod",
+   "source": "dc-east",
+   "target": "vsan-east-prod",
+   "relation": "contains"
+  },
+  {
+   "id": "member:vsan-east-prod>esx-e01",
+   "source": "vsan-east-prod",
+   "target": "esx-e01",
+   "relation": "member"
+  },
+  {
+   "id": "houses:rack-e01>esx-e01",
+   "source": "rack-e01",
+   "target": "esx-e01",
+   "relation": "houses"
+  },
+  {
+   "id": "serves:subnet-east-prod-compute>esx-e01",
+   "source": "subnet-east-prod-compute",
+   "target": "esx-e01",
+   "relation": "serves"
+  },
+  {
+   "id": "member:vsan-east-prod>esx-e02",
+   "source": "vsan-east-prod",
+   "target": "esx-e02",
+   "relation": "member"
+  },
+  {
+   "id": "houses:rack-e01>esx-e02",
+   "source": "rack-e01",
+   "target": "esx-e02",
+   "relation": "houses"
+  },
+  {
+   "id": "serves:subnet-east-prod-compute>esx-e02",
+   "source": "subnet-east-prod-compute",
+   "target": "esx-e02",
+   "relation": "serves"
+  },
+  {
+   "id": "member:vsan-east-prod>esx-e03",
+   "source": "vsan-east-prod",
+   "target": "esx-e03",
+   "relation": "member"
+  },
+  {
+   "id": "houses:rack-e01>esx-e03",
+   "source": "rack-e01",
+   "target": "esx-e03",
+   "relation": "houses"
+  },
+  {
+   "id": "serves:subnet-east-prod-compute>esx-e03",
+   "source": "subnet-east-prod-compute",
+   "target": "esx-e03",
+   "relation": "serves"
+  },
+  {
+   "id": "houses:rack-e02>bm-e01",
+   "source": "rack-e02",
+   "target": "bm-e01",
+   "relation": "houses"
+  },
+  {
+   "id": "serves:subnet-east-prod-bm>bm-e01",
+   "source": "subnet-east-prod-bm",
+   "target": "bm-e01",
+   "relation": "serves"
+  },
+  {
+   "id": "houses:rack-e02>bm-e02",
+   "source": "rack-e02",
+   "target": "bm-e02",
+   "relation": "houses"
+  },
+  {
+   "id": "serves:subnet-east-prod-bm>bm-e02",
+   "source": "subnet-east-prod-bm",
+   "target": "bm-e02",
+   "relation": "serves"
+  },
+  {
+   "id": "houses:rack-e02>bm-e03",
+   "source": "rack-e02",
+   "target": "bm-e03",
+   "relation": "houses"
+  },
+  {
+   "id": "serves:subnet-east-prod-bm>bm-e03",
+   "source": "subnet-east-prod-bm",
+   "target": "bm-e03",
+   "relation": "serves"
+  },
+  {
+   "id": "contains:zone-east-prod>ocp-vs-east",
+   "source": "zone-east-prod",
+   "target": "ocp-vs-east",
+   "relation": "contains"
+  },
+  {
+   "id": "runs:esx-e01>vm-ocp-vs-east-k7x2p-master-0",
+   "source": "esx-e01",
+   "target": "vm-ocp-vs-east-k7x2p-master-0",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-east-prod-compute>vm-ocp-vs-east-k7x2p-master-0",
+   "source": "subnet-east-prod-compute",
+   "target": "vm-ocp-vs-east-k7x2p-master-0",
+   "relation": "serves"
+  },
+  {
+   "id": "backs:vm-ocp-vs-east-k7x2p-master-0>node-ocp-vs-east-master-0",
+   "source": "vm-ocp-vs-east-k7x2p-master-0",
+   "target": "node-ocp-vs-east-master-0",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-vs-east>node-ocp-vs-east-master-0",
+   "source": "ocp-vs-east",
+   "target": "node-ocp-vs-east-master-0",
+   "relation": "member"
+  },
+  {
+   "id": "runs:esx-e01>vm-ocp-vs-east-k7x2p-worker-0",
+   "source": "esx-e01",
+   "target": "vm-ocp-vs-east-k7x2p-worker-0",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-east-prod-compute>vm-ocp-vs-east-k7x2p-worker-0",
+   "source": "subnet-east-prod-compute",
+   "target": "vm-ocp-vs-east-k7x2p-worker-0",
+   "relation": "serves"
+  },
+  {
+   "id": "backs:vm-ocp-vs-east-k7x2p-worker-0>node-ocp-vs-east-worker-0",
+   "source": "vm-ocp-vs-east-k7x2p-worker-0",
+   "target": "node-ocp-vs-east-worker-0",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-vs-east>node-ocp-vs-east-worker-0",
+   "source": "ocp-vs-east",
+   "target": "node-ocp-vs-east-worker-0",
+   "relation": "member"
+  },
+  {
+   "id": "runs:esx-e02>vm-ocp-vs-east-k7x2p-master-1",
+   "source": "esx-e02",
+   "target": "vm-ocp-vs-east-k7x2p-master-1",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-east-prod-compute>vm-ocp-vs-east-k7x2p-master-1",
+   "source": "subnet-east-prod-compute",
+   "target": "vm-ocp-vs-east-k7x2p-master-1",
+   "relation": "serves"
+  },
+  {
+   "id": "backs:vm-ocp-vs-east-k7x2p-master-1>node-ocp-vs-east-master-1",
+   "source": "vm-ocp-vs-east-k7x2p-master-1",
+   "target": "node-ocp-vs-east-master-1",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-vs-east>node-ocp-vs-east-master-1",
+   "source": "ocp-vs-east",
+   "target": "node-ocp-vs-east-master-1",
+   "relation": "member"
+  },
+  {
+   "id": "runs:esx-e02>vm-ocp-vs-east-k7x2p-worker-1",
+   "source": "esx-e02",
+   "target": "vm-ocp-vs-east-k7x2p-worker-1",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-east-prod-compute>vm-ocp-vs-east-k7x2p-worker-1",
+   "source": "subnet-east-prod-compute",
+   "target": "vm-ocp-vs-east-k7x2p-worker-1",
+   "relation": "serves"
+  },
+  {
+   "id": "backs:vm-ocp-vs-east-k7x2p-worker-1>node-ocp-vs-east-worker-1",
+   "source": "vm-ocp-vs-east-k7x2p-worker-1",
+   "target": "node-ocp-vs-east-worker-1",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-vs-east>node-ocp-vs-east-worker-1",
+   "source": "ocp-vs-east",
+   "target": "node-ocp-vs-east-worker-1",
+   "relation": "member"
+  },
+  {
+   "id": "runs:esx-e03>vm-ocp-vs-east-k7x2p-master-2",
+   "source": "esx-e03",
+   "target": "vm-ocp-vs-east-k7x2p-master-2",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-east-prod-compute>vm-ocp-vs-east-k7x2p-master-2",
+   "source": "subnet-east-prod-compute",
+   "target": "vm-ocp-vs-east-k7x2p-master-2",
+   "relation": "serves"
+  },
+  {
+   "id": "backs:vm-ocp-vs-east-k7x2p-master-2>node-ocp-vs-east-master-2",
+   "source": "vm-ocp-vs-east-k7x2p-master-2",
+   "target": "node-ocp-vs-east-master-2",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-vs-east>node-ocp-vs-east-master-2",
+   "source": "ocp-vs-east",
+   "target": "node-ocp-vs-east-master-2",
+   "relation": "member"
+  },
+  {
+   "id": "runs:esx-e03>vm-sql-east-01",
+   "source": "esx-e03",
+   "target": "vm-sql-east-01",
+   "relation": "runs"
+  },
+  {
+   "id": "runs:esx-e03>vm-files-east-01",
+   "source": "esx-e03",
+   "target": "vm-files-east-01",
+   "relation": "runs"
+  },
+  {
+   "id": "runs:esx-e03>vm-jump-east-01",
+   "source": "esx-e03",
+   "target": "vm-jump-east-01",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-east-prod-compute>vm-sql-east-01",
+   "source": "subnet-east-prod-compute",
+   "target": "vm-sql-east-01",
+   "relation": "serves"
+  },
+  {
+   "id": "serves:subnet-east-prod-compute>vm-files-east-01",
+   "source": "subnet-east-prod-compute",
+   "target": "vm-files-east-01",
+   "relation": "serves"
+  },
+  {
+   "id": "serves:subnet-east-dmz>vm-jump-east-01",
+   "source": "subnet-east-dmz",
+   "target": "vm-jump-east-01",
+   "relation": "serves"
+  },
+  {
+   "id": "contains:zone-east-prod>ocp-bm-east",
+   "source": "zone-east-prod",
+   "target": "ocp-bm-east",
+   "relation": "contains"
+  },
+  {
+   "id": "backs:bm-e01>node-ocp-bm-east-master-0",
+   "source": "bm-e01",
+   "target": "node-ocp-bm-east-master-0",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-bm-east>node-ocp-bm-east-master-0",
+   "source": "ocp-bm-east",
+   "target": "node-ocp-bm-east-master-0",
+   "relation": "member"
+  },
+  {
+   "id": "backs:bm-e02>node-ocp-bm-east-master-1",
+   "source": "bm-e02",
+   "target": "node-ocp-bm-east-master-1",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-bm-east>node-ocp-bm-east-master-1",
+   "source": "ocp-bm-east",
+   "target": "node-ocp-bm-east-master-1",
+   "relation": "member"
+  },
+  {
+   "id": "backs:bm-e03>node-ocp-bm-east-master-2",
+   "source": "bm-e03",
+   "target": "node-ocp-bm-east-master-2",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-bm-east>node-ocp-bm-east-master-2",
+   "source": "ocp-bm-east",
+   "target": "node-ocp-bm-east-master-2",
+   "relation": "member"
+  },
+  {
+   "id": "contains:dc-west>zone-west-prod",
+   "source": "dc-west",
+   "target": "zone-west-prod",
+   "relation": "contains"
+  },
+  {
+   "id": "contains:zone-west-prod>subnet-west-prod-compute",
+   "source": "zone-west-prod",
+   "target": "subnet-west-prod-compute",
+   "relation": "contains"
+  },
+  {
+   "id": "contains:dc-west>fw-west-core",
+   "source": "dc-west",
+   "target": "fw-west-core",
+   "relation": "contains"
+  },
+  {
+   "id": "protects:fw-west-core>subnet-west-prod-compute",
+   "source": "fw-west-core",
+   "target": "subnet-west-prod-compute",
+   "relation": "protects"
+  },
+  {
+   "id": "contains:dc-west>rack-w01",
+   "source": "dc-west",
+   "target": "rack-w01",
+   "relation": "contains"
+  },
+  {
+   "id": "contains:dc-west>vsan-west-prod",
+   "source": "dc-west",
+   "target": "vsan-west-prod",
+   "relation": "contains"
+  },
+  {
+   "id": "member:vsan-west-prod>esx-w01",
+   "source": "vsan-west-prod",
+   "target": "esx-w01",
+   "relation": "member"
+  },
+  {
+   "id": "houses:rack-w01>esx-w01",
+   "source": "rack-w01",
+   "target": "esx-w01",
+   "relation": "houses"
+  },
+  {
+   "id": "serves:subnet-west-prod-compute>esx-w01",
+   "source": "subnet-west-prod-compute",
+   "target": "esx-w01",
+   "relation": "serves"
+  },
+  {
+   "id": "member:vsan-west-prod>esx-w02",
+   "source": "vsan-west-prod",
+   "target": "esx-w02",
+   "relation": "member"
+  },
+  {
+   "id": "houses:rack-w01>esx-w02",
+   "source": "rack-w01",
+   "target": "esx-w02",
+   "relation": "houses"
+  },
+  {
+   "id": "serves:subnet-west-prod-compute>esx-w02",
+   "source": "subnet-west-prod-compute",
+   "target": "esx-w02",
+   "relation": "serves"
+  },
+  {
+   "id": "contains:zone-west-prod>ocp-vs-west",
+   "source": "zone-west-prod",
+   "target": "ocp-vs-west",
+   "relation": "contains"
+  },
+  {
+   "id": "runs:esx-w01>vm-ocp-vs-west-q9m4r-master-0",
+   "source": "esx-w01",
+   "target": "vm-ocp-vs-west-q9m4r-master-0",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-west-prod-compute>vm-ocp-vs-west-q9m4r-master-0",
+   "source": "subnet-west-prod-compute",
+   "target": "vm-ocp-vs-west-q9m4r-master-0",
+   "relation": "serves"
+  },
+  {
+   "id": "backs:vm-ocp-vs-west-q9m4r-master-0>node-ocp-vs-west-master-0",
+   "source": "vm-ocp-vs-west-q9m4r-master-0",
+   "target": "node-ocp-vs-west-master-0",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-vs-west>node-ocp-vs-west-master-0",
+   "source": "ocp-vs-west",
+   "target": "node-ocp-vs-west-master-0",
+   "relation": "member"
+  },
+  {
+   "id": "runs:esx-w01>vm-ocp-vs-west-q9m4r-master-1",
+   "source": "esx-w01",
+   "target": "vm-ocp-vs-west-q9m4r-master-1",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-west-prod-compute>vm-ocp-vs-west-q9m4r-master-1",
+   "source": "subnet-west-prod-compute",
+   "target": "vm-ocp-vs-west-q9m4r-master-1",
+   "relation": "serves"
+  },
+  {
+   "id": "backs:vm-ocp-vs-west-q9m4r-master-1>node-ocp-vs-west-master-1",
+   "source": "vm-ocp-vs-west-q9m4r-master-1",
+   "target": "node-ocp-vs-west-master-1",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-vs-west>node-ocp-vs-west-master-1",
+   "source": "ocp-vs-west",
+   "target": "node-ocp-vs-west-master-1",
+   "relation": "member"
+  },
+  {
+   "id": "runs:esx-w01>vm-ocp-vs-west-q9m4r-worker-0",
+   "source": "esx-w01",
+   "target": "vm-ocp-vs-west-q9m4r-worker-0",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-west-prod-compute>vm-ocp-vs-west-q9m4r-worker-0",
+   "source": "subnet-west-prod-compute",
+   "target": "vm-ocp-vs-west-q9m4r-worker-0",
+   "relation": "serves"
+  },
+  {
+   "id": "backs:vm-ocp-vs-west-q9m4r-worker-0>node-ocp-vs-west-worker-0",
+   "source": "vm-ocp-vs-west-q9m4r-worker-0",
+   "target": "node-ocp-vs-west-worker-0",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-vs-west>node-ocp-vs-west-worker-0",
+   "source": "ocp-vs-west",
+   "target": "node-ocp-vs-west-worker-0",
+   "relation": "member"
+  },
+  {
+   "id": "runs:esx-w02>vm-ocp-vs-west-q9m4r-master-2",
+   "source": "esx-w02",
+   "target": "vm-ocp-vs-west-q9m4r-master-2",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-west-prod-compute>vm-ocp-vs-west-q9m4r-master-2",
+   "source": "subnet-west-prod-compute",
+   "target": "vm-ocp-vs-west-q9m4r-master-2",
+   "relation": "serves"
+  },
+  {
+   "id": "backs:vm-ocp-vs-west-q9m4r-master-2>node-ocp-vs-west-master-2",
+   "source": "vm-ocp-vs-west-q9m4r-master-2",
+   "target": "node-ocp-vs-west-master-2",
+   "relation": "backs"
+  },
+  {
+   "id": "member:ocp-vs-west>node-ocp-vs-west-master-2",
+   "source": "ocp-vs-west",
+   "target": "node-ocp-vs-west-master-2",
+   "relation": "member"
+  },
+  {
+   "id": "runs:esx-w02>vm-sql-west-01",
+   "source": "esx-w02",
+   "target": "vm-sql-west-01",
+   "relation": "runs"
+  },
+  {
+   "id": "serves:subnet-west-prod-compute>vm-sql-west-01",
+   "source": "subnet-west-prod-compute",
+   "target": "vm-sql-west-01",
+   "relation": "serves"
+  },
+  {
+   "id": "hosts:ocp-vs-east>ns-ocp-vs-east-payments",
+   "source": "ocp-vs-east",
+   "target": "ns-ocp-vs-east-payments",
+   "relation": "hosts"
+  },
+  {
+   "id": "contains:ns-ocp-vs-east-payments>pod-ocp-vs-east-payments-payments-api-7d9f8b-abc12",
+   "source": "ns-ocp-vs-east-payments",
+   "target": "pod-ocp-vs-east-payments-payments-api-7d9f8b-abc12",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-vs-east-worker-0>pod-ocp-vs-east-payments-payments-api-7d9f8b-abc12",
+   "source": "node-ocp-vs-east-worker-0",
+   "target": "pod-ocp-vs-east-payments-payments-api-7d9f8b-abc12",
+   "relation": "schedules"
+  },
+  {
+   "id": "contains:ns-ocp-vs-east-payments>pod-ocp-vs-east-payments-payments-api-7d9f8b-def34",
+   "source": "ns-ocp-vs-east-payments",
+   "target": "pod-ocp-vs-east-payments-payments-api-7d9f8b-def34",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-vs-east-worker-1>pod-ocp-vs-east-payments-payments-api-7d9f8b-def34",
+   "source": "node-ocp-vs-east-worker-1",
+   "target": "pod-ocp-vs-east-payments-payments-api-7d9f8b-def34",
+   "relation": "schedules"
+  },
+  {
+   "id": "contains:ns-ocp-vs-east-payments>pod-ocp-vs-east-payments-payments-worker-5c8b7d-ghi56",
+   "source": "ns-ocp-vs-east-payments",
+   "target": "pod-ocp-vs-east-payments-payments-worker-5c8b7d-ghi56",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-vs-east-worker-0>pod-ocp-vs-east-payments-payments-worker-5c8b7d-ghi56",
+   "source": "node-ocp-vs-east-worker-0",
+   "target": "pod-ocp-vs-east-payments-payments-worker-5c8b7d-ghi56",
+   "relation": "schedules"
+  },
+  {
+   "id": "hosts:ocp-vs-east>ns-ocp-vs-east-inventory",
+   "source": "ocp-vs-east",
+   "target": "ns-ocp-vs-east-inventory",
+   "relation": "hosts"
+  },
+  {
+   "id": "contains:ns-ocp-vs-east-inventory>pod-ocp-vs-east-inventory-inventory-api-66d4c9-jkl78",
+   "source": "ns-ocp-vs-east-inventory",
+   "target": "pod-ocp-vs-east-inventory-inventory-api-66d4c9-jkl78",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-vs-east-worker-1>pod-ocp-vs-east-inventory-inventory-api-66d4c9-jkl78",
+   "source": "node-ocp-vs-east-worker-1",
+   "target": "pod-ocp-vs-east-inventory-inventory-api-66d4c9-jkl78",
+   "relation": "schedules"
+  },
+  {
+   "id": "contains:ns-ocp-vs-east-inventory>pod-ocp-vs-east-inventory-inventory-api-66d4c9-mno90",
+   "source": "ns-ocp-vs-east-inventory",
+   "target": "pod-ocp-vs-east-inventory-inventory-api-66d4c9-mno90",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-vs-east-worker-0>pod-ocp-vs-east-inventory-inventory-api-66d4c9-mno90",
+   "source": "node-ocp-vs-east-worker-0",
+   "target": "pod-ocp-vs-east-inventory-inventory-api-66d4c9-mno90",
+   "relation": "schedules"
+  },
+  {
+   "id": "contains:ns-ocp-vs-east-inventory>pod-ocp-vs-east-inventory-inventory-db-0",
+   "source": "ns-ocp-vs-east-inventory",
+   "target": "pod-ocp-vs-east-inventory-inventory-db-0",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-vs-east-worker-1>pod-ocp-vs-east-inventory-inventory-db-0",
+   "source": "node-ocp-vs-east-worker-1",
+   "target": "pod-ocp-vs-east-inventory-inventory-db-0",
+   "relation": "schedules"
+  },
+  {
+   "id": "hosts:ocp-bm-east>ns-ocp-bm-east-payments",
+   "source": "ocp-bm-east",
+   "target": "ns-ocp-bm-east-payments",
+   "relation": "hosts"
+  },
+  {
+   "id": "contains:ns-ocp-bm-east-payments>pod-ocp-bm-east-payments-payments-api-7d9f8b-pqr12",
+   "source": "ns-ocp-bm-east-payments",
+   "target": "pod-ocp-bm-east-payments-payments-api-7d9f8b-pqr12",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-bm-east-master-0>pod-ocp-bm-east-payments-payments-api-7d9f8b-pqr12",
+   "source": "node-ocp-bm-east-master-0",
+   "target": "pod-ocp-bm-east-payments-payments-api-7d9f8b-pqr12",
+   "relation": "schedules"
+  },
+  {
+   "id": "contains:ns-ocp-bm-east-payments>pod-ocp-bm-east-payments-payments-api-7d9f8b-stu34",
+   "source": "ns-ocp-bm-east-payments",
+   "target": "pod-ocp-bm-east-payments-payments-api-7d9f8b-stu34",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-bm-east-master-1>pod-ocp-bm-east-payments-payments-api-7d9f8b-stu34",
+   "source": "node-ocp-bm-east-master-1",
+   "target": "pod-ocp-bm-east-payments-payments-api-7d9f8b-stu34",
+   "relation": "schedules"
+  },
+  {
+   "id": "hosts:ocp-bm-east>ns-ocp-bm-east-ml-platform",
+   "source": "ocp-bm-east",
+   "target": "ns-ocp-bm-east-ml-platform",
+   "relation": "hosts"
+  },
+  {
+   "id": "contains:ns-ocp-bm-east-ml-platform>pod-ocp-bm-east-ml-platform-notebook-controller-5f6d7e-vwx56",
+   "source": "ns-ocp-bm-east-ml-platform",
+   "target": "pod-ocp-bm-east-ml-platform-notebook-controller-5f6d7e-vwx56",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-bm-east-master-2>pod-ocp-bm-east-ml-platform-notebook-controller-5f6d7e-vwx56",
+   "source": "node-ocp-bm-east-master-2",
+   "target": "pod-ocp-bm-east-ml-platform-notebook-controller-5f6d7e-vwx56",
+   "relation": "schedules"
+  },
+  {
+   "id": "contains:ns-ocp-bm-east-ml-platform>pod-ocp-bm-east-ml-platform-model-serving-fraud-v3-0",
+   "source": "ns-ocp-bm-east-ml-platform",
+   "target": "pod-ocp-bm-east-ml-platform-model-serving-fraud-v3-0",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-bm-east-master-0>pod-ocp-bm-east-ml-platform-model-serving-fraud-v3-0",
+   "source": "node-ocp-bm-east-master-0",
+   "target": "pod-ocp-bm-east-ml-platform-model-serving-fraud-v3-0",
+   "relation": "schedules"
+  },
+  {
+   "id": "contains:ns-ocp-bm-east-ml-platform>pod-ocp-bm-east-ml-platform-model-serving-fraud-v3-1",
+   "source": "ns-ocp-bm-east-ml-platform",
+   "target": "pod-ocp-bm-east-ml-platform-model-serving-fraud-v3-1",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-bm-east-master-1>pod-ocp-bm-east-ml-platform-model-serving-fraud-v3-1",
+   "source": "node-ocp-bm-east-master-1",
+   "target": "pod-ocp-bm-east-ml-platform-model-serving-fraud-v3-1",
+   "relation": "schedules"
+  },
+  {
+   "id": "hosts:ocp-vs-west>ns-ocp-vs-west-payments",
+   "source": "ocp-vs-west",
+   "target": "ns-ocp-vs-west-payments",
+   "relation": "hosts"
+  },
+  {
+   "id": "contains:ns-ocp-vs-west-payments>pod-ocp-vs-west-payments-payments-api-7d9f8b-yza78",
+   "source": "ns-ocp-vs-west-payments",
+   "target": "pod-ocp-vs-west-payments-payments-api-7d9f8b-yza78",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-vs-west-worker-0>pod-ocp-vs-west-payments-payments-api-7d9f8b-yza78",
+   "source": "node-ocp-vs-west-worker-0",
+   "target": "pod-ocp-vs-west-payments-payments-api-7d9f8b-yza78",
+   "relation": "schedules"
+  },
+  {
+   "id": "contains:ns-ocp-vs-west-payments>pod-ocp-vs-west-payments-payments-api-7d9f8b-bcd90",
+   "source": "ns-ocp-vs-west-payments",
+   "target": "pod-ocp-vs-west-payments-payments-api-7d9f8b-bcd90",
+   "relation": "contains"
+  },
+  {
+   "id": "schedules:node-ocp-vs-west-worker-0>pod-ocp-vs-west-payments-payments-api-7d9f8b-bcd90",
+   "source": "node-ocp-vs-west-worker-0",
+   "target": "pod-ocp-vs-west-payments-payments-api-7d9f8b-bcd90",
+   "relation": "schedules"
+  }
+ ]
+}

@@ -15,6 +15,8 @@ grafana/
       <dashboard>.json    exported dashboard JSON; must contain "uid" and "title"
   scripts/
     push_dashboards.py    sync script (Python 3, stdlib only)
+  estate/                 Estate Explorer: topology panel source, mock API, local dev stack
+                          (see estate/README.md; its dashboard lives in dashboards/estate/)
 ```
 
 Dashboards placed directly under `dashboards/` go to the **General** folder.
@@ -35,6 +37,7 @@ creates a new dashboard.
    | secret   | `GRAFANA_SA_TOKEN`       | the token from step 2                      |
    | variable | `GRAFANA_DATASOURCE_UID` | uid of the Prometheus datasource           |
    | variable | `GRAFANA_ORG_ID`         | (optional) org id if not the default org   |
+   | variable | `GRAFANA_INPUT_DS_INFINITY` | uid of the Infinity datasource (Estate dashboards) |
 
 ### Datasource inputs
 

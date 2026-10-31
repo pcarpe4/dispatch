@@ -123,9 +123,9 @@ def resolve_inputs(dashboard: dict, env: dict[str, str]) -> list[dict]:
     resolved = []
     for inp in dashboard.get("__inputs", []):
         name = inp["name"]
-        value = env.get(f"GRAFANA_INPUT_{name}")
+        value = env.get(f"GRAFANA_INPUT_{name}") or None  # unset CI variables arrive as ""
         if value is None and inp.get("type") == "datasource":
-            value = env.get("GRAFANA_DATASOURCE_UID")
+            value = env.get("GRAFANA_DATASOURCE_UID") or None
         if value is None:
             raise GrafanaError(
                 f"no value for input '{name}': set GRAFANA_INPUT_{name}"

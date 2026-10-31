@@ -4,6 +4,7 @@
 |---|---|
 | [`grafana/dashboards/`](grafana/dashboards) | Grafana dashboards (OpenShift, GPU/KServe), auto-pushed by Actions — see [`grafana/README.md`](grafana/README.md) |
 | [`grafana/alloy/`](grafana/alloy) | Grafana Alloy scrape configs |
+| [`grafana/estate/`](grafana/estate) | Estate Explorer: interactive infrastructure topology dashboard (Infinity + HTML graphics), mock relationship API, local dev stack — see [`grafana/estate/README.md`](grafana/estate/README.md) |
 | [`scripts/`](scripts) | Standalone shell tools: `find-non-olm-operators.sh`, `healthz/`, `multi-oc/`, `vrops-openshift-esxi-mapping.sh` |
 | [`config-exporter/`](config-exporter) | Config-driven OpenShift config exporter (Python, with k8s manifests) |
 | [`compliance-agent/`](compliance-agent) | Weekly compliance agent + RAG chatbot skeleton (Python, Helm chart) |

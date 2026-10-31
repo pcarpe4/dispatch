@@ -1,0 +1,1238 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_INFINITY",
+      "label": "Estate API (Infinity)",
+      "description": "Infinity data source whose base URL points at the estate relationship API (or the mock). Queries use URLs relative to it.",
+      "type": "datasource",
+      "pluginId": "yesoreyeram-infinity-datasource",
+      "pluginName": "Infinity"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "yesoreyeram-infinity-datasource",
+      "name": "Infinity",
+      "version": "3.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "gapit-htmlgraphics-panel",
+      "name": "HTML graphics",
+      "version": "2.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "nodeGraph",
+      "name": "Node Graph",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "bargauge",
+      "name": "Bar gauge",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Interactive view of the infrastructure estate (datacenters, zones, subnets, firewalls, racks, ESXi, bare metal, VMs, OpenShift clusters, nodes, namespaces, pods) read from the relationship API. Pick a root object, a depth and a direction; one traversal call feeds every panel.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 8,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "**Root** is where the walk starts, **Depth** how many relationship hops to follow, **Direction** which way: *down* = what the root contains or provides, *up* = what the root depends on, *both* = everything near it. Every panel below is a different view of the **same single API call** (`/traverse`). Double-click a node in the topology, or use *make root* in its details, to re-centre the whole dashboard on it."
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Objects in view, by type",
+      "description": "Count of each object type returned by the traversal. Hide/show types in the topology legend; this count is unaffected.",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "type": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "id": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "rowsToFields",
+          "options": {}
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 14,
+        "x": 0,
+        "y": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 30
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "OpenShift clusters reached",
+      "description": "Distinct clusters among the OpenShift nodes in view. With a subnet or host as root this answers: how many clusters run on it?",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "fieldName": "type",
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "ocp_node"
+                  }
+                }
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "cluster": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 14,
+        "y": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "displayName": "clusters",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "count"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Physical cores in view",
+      "description": "Sum of CPU cores over the ESXi and bare-metal hosts in view: the hardware footprint under the current root.",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "fieldName": "type",
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": "^(esxi_host|baremetal_host)$"
+                  }
+                }
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 19,
+        "y": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "noValue": "0",
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "/^cpu_cores$/",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 3,
+      "type": "gapit-htmlgraphics-panel",
+      "title": "Topology",
+      "description": "Layered map of everything the traversal returned: containers on top, what they contain below. Scroll to zoom, drag to pan, click for details, double-click to make a node the root. Source: grafana/estate/panel/.",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "gridPos": {
+        "h": 17,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "SVGBaseFix": true,
+        "add100Percentage": true,
+        "centerAlignContent": false,
+        "overflow": "hidden",
+        "useGrafanaScrollbar": false,
+        "calcsMutation": "none",
+        "reduceOptions": {
+          "calcs": []
+        },
+        "rootCSS": "",
+        "css": {
+          "$file": "panel/estate-graph.css"
+        },
+        "html": {
+          "$file": "panel/estate-graph.html"
+        },
+        "renderOnMount": true,
+        "panelupdateOnMount": true,
+        "onRender": {
+          "$file": "panel/estate-graph.js"
+        },
+        "onInit": "",
+        "onInitOnResize": false,
+        "dynamicData": false,
+        "dynamicFieldDisplayValues": false,
+        "dynamicProps": false,
+        "dynamicHtmlGraphics": false,
+        "codeData": "{}",
+        "importedPanelOptions": ""
+      }
+    },
+    {
+      "id": 9,
+      "type": "row",
+      "title": "Details",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      }
+    },
+    {
+      "id": 1,
+      "type": "table",
+      "title": "Objects in view",
+      "description": "SOURCE PANEL: the only panel that calls the API (two queries against /traverse: nodes and edges). Every other panel reads these rows through the built-in Dashboard data source. Use the column filters (funnel icons) to answer granular questions, e.g. type = vm to see every VM and its OS.",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY}"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "url": "/traverse?root=${root}&depth=${depth}&direction=${direction}",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "root_selector": "$.nodes",
+          "columns": [
+            {
+              "selector": "id",
+              "text": "id",
+              "type": "string"
+            },
+            {
+              "selector": "type",
+              "text": "type",
+              "type": "string"
+            },
+            {
+              "selector": "name",
+              "text": "name",
+              "type": "string"
+            },
+            {
+              "selector": "depth",
+              "text": "depth",
+              "type": "number"
+            },
+            {
+              "selector": "datacenter",
+              "text": "datacenter",
+              "type": "string"
+            },
+            {
+              "selector": "cluster",
+              "text": "cluster",
+              "type": "string"
+            },
+            {
+              "selector": "namespace",
+              "text": "namespace",
+              "type": "string"
+            },
+            {
+              "selector": "status",
+              "text": "status",
+              "type": "string"
+            },
+            {
+              "selector": "os",
+              "text": "os",
+              "type": "string"
+            },
+            {
+              "selector": "version",
+              "text": "version",
+              "type": "string"
+            },
+            {
+              "selector": "role",
+              "text": "role",
+              "type": "string"
+            },
+            {
+              "selector": "ip",
+              "text": "ip",
+              "type": "string"
+            },
+            {
+              "selector": "cidr",
+              "text": "cidr",
+              "type": "string"
+            },
+            {
+              "selector": "vendor",
+              "text": "vendor",
+              "type": "string"
+            },
+            {
+              "selector": "model",
+              "text": "model",
+              "type": "string"
+            },
+            {
+              "selector": "platform",
+              "text": "platform",
+              "type": "string"
+            },
+            {
+              "selector": "env",
+              "text": "env",
+              "type": "string"
+            },
+            {
+              "selector": "owner_team",
+              "text": "owner_team",
+              "type": "string"
+            },
+            {
+              "selector": "app",
+              "text": "app",
+              "type": "string"
+            },
+            {
+              "selector": "cpu_cores",
+              "text": "cpu_cores",
+              "type": "number"
+            },
+            {
+              "selector": "mem_gb",
+              "text": "mem_gb",
+              "type": "number"
+            },
+            {
+              "selector": "cpu_used_pct",
+              "text": "cpu_used_pct",
+              "type": "number"
+            },
+            {
+              "selector": "mem_used_pct",
+              "text": "mem_used_pct",
+              "type": "number"
+            },
+            {
+              "selector": "node_count",
+              "text": "node_count",
+              "type": "number"
+            },
+            {
+              "selector": "pod_count",
+              "text": "pod_count",
+              "type": "number"
+            },
+            {
+              "selector": "vm_count",
+              "text": "vm_count",
+              "type": "number"
+            },
+            {
+              "selector": "host_count",
+              "text": "host_count",
+              "type": "number"
+            },
+            {
+              "selector": "name",
+              "text": "title",
+              "type": "string"
+            },
+            {
+              "selector": "type",
+              "text": "subtitle",
+              "type": "string"
+            },
+            {
+              "selector": "cpu_used_pct",
+              "text": "mainstat",
+              "type": "number"
+            },
+            {
+              "selector": "mem_used_pct",
+              "text": "secondarystat",
+              "type": "number"
+            },
+            {
+              "selector": "os",
+              "text": "detail__os",
+              "type": "string"
+            },
+            {
+              "selector": "version",
+              "text": "detail__version",
+              "type": "string"
+            },
+            {
+              "selector": "status",
+              "text": "detail__status",
+              "type": "string"
+            },
+            {
+              "selector": "ip",
+              "text": "detail__ip",
+              "type": "string"
+            },
+            {
+              "selector": "cidr",
+              "text": "detail__cidr",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY}"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "url": "/traverse?root=${root}&depth=${depth}&direction=${direction}",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "root_selector": "$.edges",
+          "columns": [
+            {
+              "selector": "id",
+              "text": "id",
+              "type": "string"
+            },
+            {
+              "selector": "source",
+              "text": "source",
+              "type": "string"
+            },
+            {
+              "selector": "target",
+              "text": "target",
+              "type": "string"
+            },
+            {
+              "selector": "relation",
+              "text": "relation",
+              "type": "string"
+            },
+            {
+              "selector": "relation",
+              "text": "mainstat",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "title": true,
+              "subtitle": true,
+              "mainstat": true,
+              "secondarystat": true,
+              "detail__os": true,
+              "detail__version": true,
+              "detail__status": true,
+              "detail__ip": true,
+              "detail__cidr": true
+            },
+            "renameByName": {},
+            "indexByName": {
+              "type": 0,
+              "name": 1,
+              "datacenter": 2,
+              "cluster": 3,
+              "namespace": 4,
+              "status": 5,
+              "os": 6,
+              "version": 7,
+              "role": 8,
+              "ip": 9,
+              "cidr": 10,
+              "cpu_cores": 11,
+              "mem_gb": 12,
+              "cpu_used_pct": 13,
+              "mem_used_pct": 14,
+              "node_count": 15,
+              "pod_count": 16,
+              "vm_count": 17,
+              "host_count": 18,
+              "vendor": 19,
+              "model": 20,
+              "platform": 21,
+              "env": 22,
+              "owner_team": 23,
+              "app": 24,
+              "depth": 25,
+              "id": 26
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 13,
+        "w": 14,
+        "x": 0,
+        "y": 26
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/_pct$/"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 120
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": true,
+          "reducer": [
+            "count"
+          ],
+          "countRows": false,
+          "fields": [
+            "name"
+          ]
+        },
+        "sortBy": [
+          {
+            "displayName": "type",
+            "desc": false
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "type": "bargauge",
+      "title": "Host utilisation (CPU, memory)",
+      "description": "ESXi and bare-metal hosts in view, from the same rows. Each bar is one host and one measure (the display-name override reads the host name from the row). Colour thresholds: 70% warning, 85% critical.",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "fieldName": "type",
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": "^(esxi_host|baremetal_host)$"
+                  }
+                }
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "id": true,
+              "type": true,
+              "depth": true,
+              "datacenter": true,
+              "cluster": true,
+              "namespace": true,
+              "status": true,
+              "os": true,
+              "version": true,
+              "role": true,
+              "ip": true,
+              "cidr": true,
+              "vendor": true,
+              "model": true,
+              "platform": true,
+              "env": true,
+              "owner_team": true,
+              "app": true,
+              "cpu_cores": true,
+              "mem_gb": true,
+              "node_count": true,
+              "pod_count": true,
+              "vm_count": true,
+              "host_count": true,
+              "title": true,
+              "subtitle": true,
+              "mainstat": true,
+              "secondarystat": true,
+              "detail__os": true,
+              "detail__version": true,
+              "detail__status": true,
+              "detail__ip": true,
+              "detail__cidr": true
+            },
+            "indexByName": {
+              "name": 0,
+              "cpu_used_pct": 1,
+              "mem_used_pct": 2
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 13,
+        "w": 10,
+        "x": 14,
+        "y": 26
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cpu_used_pct"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "${__data.fields.name} cpu"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "mem_used_pct"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "${__data.fields.name} memory"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "valueMode": "color",
+        "namePlacement": "auto",
+        "showUnfilled": true,
+        "sizing": "auto",
+        "minVizWidth": 8,
+        "minVizHeight": 16,
+        "maxVizHeight": 300,
+        "text": {},
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false,
+          "calcs": []
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "nodeGraph",
+      "title": "Topology (built-in Node Graph, no custom code)",
+      "description": "The same nodes and edges in Grafana's stock Node Graph panel. It reads fixed field names (id, title, subtitle, mainstat, detail__*), so the source queries emit those as extra alias columns. Fine for a few hundred objects; the custom panel above scales and explains better.",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "transformations": [],
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "nodes": {
+          "mainStatUnit": "%",
+          "secondaryStatUnit": "%"
+        },
+        "edges": {
+          "mainStatUnit": "",
+          "secondaryStatUnit": ""
+        },
+        "zoomMode": "cooperative",
+        "layoutAlgorithm": "layered"
+      }
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "estate",
+    "topology",
+    "infrastructure",
+    "openshift",
+    "vmware"
+  ],
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "DS_INFINITY",
+        "label": "Estate API",
+        "query": "yesoreyeram-infinity-datasource",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false
+      },
+      {
+        "type": "query",
+        "name": "root",
+        "label": "Root",
+        "description": "Where the relationship walk starts. Any object can be a root; this list offers the usual starting points.",
+        "datasource": {
+          "type": "yesoreyeram-infinity-datasource",
+          "uid": "${DS_INFINITY}"
+        },
+        "definition": "GET /nodes?type=datacenter,zone,subnet,hardware_group,vsphere_cluster,esxi_host,baremetal_host,ocp_cluster,namespace",
+        "query": {
+          "queryType": "infinity",
+          "query": "",
+          "infinityQuery": {
+            "refId": "variable",
+            "type": "json",
+            "source": "url",
+            "parser": "backend",
+            "format": "table",
+            "url": "/nodes?type=datacenter,zone,subnet,hardware_group,vsphere_cluster,esxi_host,baremetal_host,ocp_cluster,namespace",
+            "url_options": {
+              "method": "GET",
+              "data": ""
+            },
+            "root_selector": "",
+            "columns": [
+              {
+                "selector": "label",
+                "text": "__text",
+                "type": "string"
+              },
+              {
+                "selector": "id",
+                "text": "__value",
+                "type": "string"
+              }
+            ],
+            "filters": [],
+            "global_query_id": ""
+          }
+        },
+        "current": {
+          "selected": true,
+          "text": "East DC  [datacenter]",
+          "value": "dc-east"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0
+      },
+      {
+        "type": "custom",
+        "name": "depth",
+        "label": "Depth (hops)",
+        "description": "How many relationship hops to follow from the root. 'all' walks to the end.",
+        "query": "all,1,2,3,4,6",
+        "current": {
+          "selected": true,
+          "text": "all",
+          "value": "all"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "all",
+            "value": "all"
+          },
+          {
+            "selected": false,
+            "text": "1",
+            "value": "1"
+          },
+          {
+            "selected": false,
+            "text": "2",
+            "value": "2"
+          },
+          {
+            "selected": false,
+            "text": "3",
+            "value": "3"
+          },
+          {
+            "selected": false,
+            "text": "4",
+            "value": "4"
+          },
+          {
+            "selected": false,
+            "text": "6",
+            "value": "6"
+          }
+        ],
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "skipUrlSync": false
+      },
+      {
+        "type": "custom",
+        "name": "direction",
+        "label": "Direction",
+        "description": "down: what the root contains or provides. up: what the root depends on. both: everything near it (fans out quickly).",
+        "query": "down,up,both",
+        "current": {
+          "selected": true,
+          "text": "down",
+          "value": "down"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "down",
+            "value": "down"
+          },
+          {
+            "selected": false,
+            "text": "up",
+            "value": "up"
+          },
+          {
+            "selected": false,
+            "text": "both",
+            "value": "both"
+          }
+        ],
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "skipUrlSync": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": true
+  },
+  "timezone": "",
+  "title": "Estate / Explorer",
+  "uid": "estate-explorer",
+  "version": 1,
+  "weekStart": ""
+}

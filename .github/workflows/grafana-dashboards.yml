@@ -9,6 +9,7 @@ name: Grafana Dashboards
 # Optional repository/environment variables:
 #   GRAFANA_DATASOURCE_UID  default datasource uid for ${DS_*} inputs
 #   GRAFANA_ORG_ID          organisation id if not the default org
+#   GRAFANA_INPUT_DS_INFINITY  uid of the Infinity datasource (estate dashboards)
 
 on:
   push:
@@ -61,6 +62,7 @@ jobs:
       GRAFANA_SA_TOKEN: ${{ secrets.GRAFANA_SA_TOKEN }}
       GRAFANA_ORG_ID: ${{ vars.GRAFANA_ORG_ID }}
       GRAFANA_DATASOURCE_UID: ${{ vars.GRAFANA_DATASOURCE_UID }}
+      GRAFANA_INPUT_DS_INFINITY: ${{ vars.GRAFANA_INPUT_DS_INFINITY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

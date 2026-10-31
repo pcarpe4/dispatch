@@ -40,6 +40,10 @@ jobs:
           cache-dependency-path: config-exporter/requirements.txt
       - name: Syntax check all Python
         run: python -m compileall -q .
+      - name: estate mock API tests
+        run: python -m unittest discover -s grafana/estate/mock -v
+      - name: estate dashboard is built from its source
+        run: python3 grafana/estate/build_dashboard.py --check
       - name: config-exporter tests
         working-directory: config-exporter
         run: |

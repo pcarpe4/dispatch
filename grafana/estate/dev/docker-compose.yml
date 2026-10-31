@@ -1,0 +1,33 @@
+# Local stack: Grafana + Infinity + HTML Graphics, fed by the mock estate API.
+#
+#   cd grafana/estate/dev && docker compose up
+#   open http://localhost:3000/d/estate-explorer   (admin / admin)
+#   mock API log (one line per call Grafana makes): docker compose logs -f mock-api
+#
+# GF_INSTALL_PLUGINS downloads the two plugins from grafana.com at start-up. Behind a proxy
+# without that access, download the plugin zips once and mount them instead:
+#   volumes: [ ./plugins:/var/lib/grafana/plugins ]
+services:
+  mock-api:
+    image: python:3.12-alpine
+    command: ["python3", "/app/mock_api.py", "--bind", "0.0.0.0", "--port", "8099", "--data", "/app/estate-sample.json"]
+    volumes:
+      - ../mock:/app:ro
+    ports:
+      - "8099:8099"
+
+  grafana:
+    image: grafana/grafana-oss:12.4.14
+    depends_on:
+      - mock-api
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: yesoreyeram-infinity-datasource,gapit-htmlgraphics-panel
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning:ro
+      - ../../dashboards/estate:/var/lib/grafana/dashboards/estate:ro

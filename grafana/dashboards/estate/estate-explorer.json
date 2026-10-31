@@ -1,0 +1,1232 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_INFINITY",
+      "label": "Estate API (Infinity)",
+      "description": "Infinity data source whose base URL points at the estate relationship API (or the mock). Queries use URLs relative to it.",
+      "type": "datasource",
+      "pluginId": "yesoreyeram-infinity-datasource",
+      "pluginName": "Infinity"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "yesoreyeram-infinity-datasource",
+      "name": "Infinity",
+      "version": "3.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "gapit-htmlgraphics-panel",
+      "name": "HTML graphics",
+      "version": "2.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "nodeGraph",
+      "name": "Node Graph",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "bargauge",
+      "name": "Bar gauge",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Interactive view of the infrastructure estate (datacenters, zones, subnets, firewalls, racks, ESXi, bare metal, VMs, OpenShift clusters, nodes, namespaces, pods) read from the relationship API. Pick a root object, a depth and a direction; one traversal call feeds every panel.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 8,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "**Root** is where the walk starts, **Depth** how many relationship hops to follow, **Direction** which way: *down* = what the root contains or provides, *up* = what the root depends on, *both* = everything near it. Every panel below is a different view of the **same single API call** (`/traverse`). Double-click a node in the topology, or use *make root* in its details, to re-centre the whole dashboard on it."
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Objects in view, by type",
+      "description": "Count of each object type returned by the traversal. Hide/show types in the topology legend; this count is unaffected.",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "type": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "id": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "rowsToFields",
+          "options": {}
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 14,
+        "x": 0,
+        "y": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 30
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "OpenShift clusters reached",
+      "description": "Distinct clusters among the OpenShift nodes in view. With a subnet or host as root this answers: how many clusters run on it?",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "fieldName": "type",
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "ocp_node"
+                  }
+                }
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "cluster": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 14,
+        "y": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "displayName": "clusters",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "count"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Physical cores in view",
+      "description": "Sum of CPU cores over the ESXi and bare-metal hosts in view: the hardware footprint under the current root.",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "fieldName": "type",
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": "^(esxi_host|baremetal_host)$"
+                  }
+                }
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 19,
+        "y": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "noValue": "0",
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "/^cpu_cores$/",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 3,
+      "type": "gapit-htmlgraphics-panel",
+      "title": "Topology",
+      "description": "Layered map of everything the traversal returned: containers on top, what they contain below. Scroll to zoom, drag to pan, click for details, double-click to make a node the root. Source: grafana/estate/panel/.",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "gridPos": {
+        "h": 17,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "SVGBaseFix": true,
+        "add100Percentage": true,
+        "centerAlignContent": false,
+        "overflow": "hidden",
+        "useGrafanaScrollbar": false,
+        "calcsMutation": "none",
+        "reduceOptions": {
+          "calcs": []
+        },
+        "rootCSS": "",
+        "css": "/* Estate topology panel. Colours come from CSS variables set by estate-graph.js from the Grafana theme. */\n* { box-sizing: border-box; }\n.estate {\n  --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781; --line: #c3c2b7; --grid: #e1e0d9;\n  --surface: #ffffff; --surface-2: #f4f5f5; --accent: #2a78d6;\n  display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0;\n  color: var(--ink); font-family: Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif; font-size: 12px;\n  overflow: hidden;\n}\n.toolbar { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-bottom: 1px solid var(--grid); flex: 0 0 auto; }\n.toolbar .crumb { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }\n.toolbar .crumb .dim { color: var(--ink-2); font-weight: 400; }\n.toolbar input { flex: 1 1 120px; min-width: 80px; font: inherit; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }\n.toolbar button { font: inherit; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; cursor: pointer; }\n.toolbar button:hover { border-color: var(--accent); }\n.toolbar .count { color: var(--ink-2); white-space: nowrap; }\n.body { display: flex; flex: 1 1 auto; min-height: 0; position: relative; }\n.canvas { flex: 1 1 auto; min-width: 0; position: relative; }\n.canvas svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }\n.canvas svg.panning { cursor: grabbing; }\n.empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--ink-2); }\n.empty[hidden] { display: none; }\n.side { flex: 0 0 270px; max-width: 45%; border-left: 1px solid var(--grid); overflow: auto; padding: 8px 10px; background: var(--surface); }\n.estate.narrow .side { position: absolute; right: 0; top: 0; bottom: 0; width: 270px; display: none; box-shadow: -4px 0 12px rgba(0,0,0,0.15); }\n.estate.narrow.has-selection .side { display: block; }\n.side .hint { color: var(--ink-2); line-height: 1.4; }\n.side h3 { margin: 0 0 2px; font-size: 14px; word-break: break-all; }\n.side .pill { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); color: var(--ink-2); margin: 0 0 8px; }\n.side .pill i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }\n.side .actions { display: flex; gap: 6px; margin: 4px 0 10px; }\n.side .actions button { font: inherit; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; cursor: pointer; }\n.side .actions button:hover { border-color: var(--accent); }\n.side table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }\n.side td { padding: 2px 4px; vertical-align: top; border-bottom: 1px solid var(--grid); word-break: break-word; }\n.side td:first-child { color: var(--ink-2); white-space: nowrap; width: 38%; }\n.side td.num { font-variant-numeric: tabular-nums; }\n.side h4 { margin: 8px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-2); }\n.side .rel { display: flex; align-items: baseline; gap: 6px; padding: 2px 0; cursor: pointer; border-radius: 3px; }\n.side .rel:hover { background: var(--surface-2); }\n.side .rel .arrow { color: var(--muted); flex: 0 0 auto; }\n.side .rel .what { color: var(--ink-2); flex: 0 0 auto; }\n.side .rel .who { font-weight: 600; word-break: break-all; }\n.side .rel .who.hidden-type { font-weight: 400; color: var(--muted); }\n.legend { display: flex; flex-wrap: wrap; gap: 4px 8px; padding: 4px 6px; border-top: 1px solid var(--grid); flex: 0 0 auto; }\n.legend .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-2); cursor: pointer; user-select: none; padding: 1px 4px; border-radius: 3px; }\n.legend .chip:hover { background: var(--surface-2); }\n.legend .chip i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; }\n.legend .chip b { color: var(--ink); font-weight: 600; }\n.legend .chip.off { text-decoration: line-through; opacity: 0.55; }\n.legend .chip.off i { background: transparent !important; outline: 1px solid var(--line); }\n/* SVG */\n.edge { fill: none; stroke: var(--line); stroke-width: 1.2; marker-end: url(#estate-arrow); }\n.edge.via { stroke-dasharray: 4 3; }\n.edge.hl { stroke: var(--ink); stroke-width: 2; }\n.edge.dim { opacity: 0.12; }\n.arrow { fill: var(--line); }\n.node { cursor: pointer; }\n.node .box { fill: var(--surface); stroke: var(--line); stroke-width: 1; rx: 6; }\n.node:hover .box { stroke: var(--ink-2); }\n.node.selected .box { stroke-width: 2.5; }\n.node.root .box { stroke-width: 2; }\n.node .bar { rx: 3; }\n.node text { fill: var(--ink); font-size: 12px; font-weight: 600; pointer-events: none; }\n.node text.type { fill: var(--ink-2); font-size: 10px; font-weight: 400; }\n.node .meter-track { fill: var(--grid); }\n.node .meter { fill: var(--ink-2); }\n.node.dim { opacity: 0.18; }\n.node.hit .box { stroke: var(--accent); stroke-width: 2.5; }\n.node.hidden-by-search { opacity: 0.18; }\n",
+        "html": "<div id=\"estate\" class=\"estate\">\n  <div class=\"toolbar\">\n    <span class=\"crumb\" id=\"estate-root\" title=\"Current root (the $root dashboard variable)\"></span>\n    <input id=\"estate-search\" type=\"search\" placeholder=\"find by name, id or type\" aria-label=\"Find a node\" />\n    <button id=\"estate-fit\" type=\"button\" title=\"Zoom to fit\">fit</button>\n    <button id=\"estate-clear\" type=\"button\" title=\"Clear selection and search\">clear</button>\n    <span class=\"count\" id=\"estate-count\"></span>\n  </div>\n  <div class=\"body\">\n    <div class=\"canvas\" id=\"estate-canvas\">\n      <svg id=\"estate-svg\" role=\"img\" aria-label=\"Estate topology\">\n        <defs>\n          <marker id=\"estate-arrow\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto-start-reverse\">\n            <path d=\"M 0 0 L 10 5 L 0 10 z\" class=\"arrow\"></path>\n          </marker>\n        </defs>\n        <g id=\"estate-view\"></g>\n      </svg>\n      <div class=\"empty\" id=\"estate-empty\" hidden>No objects. The source panel returned no rows for this root.</div>\n    </div>\n    <aside class=\"side\" id=\"estate-side\">\n      <div class=\"hint\">Click a node for its details and relations. Double-click (or \"make root\") to re-centre the whole dashboard on it. Scroll to zoom, drag to pan, click a legend chip to hide a type.</div>\n    </aside>\n  </div>\n  <div class=\"legend\" id=\"estate-legend\"></div>\n</div>\n",
+        "renderOnMount": true,
+        "panelupdateOnMount": true,
+        "onRender": "/*\n * Estate topology - the onRender script of the \"Topology\" HTML Graphics panel.\n *\n * Grafana runs this every time the panel gets new data (and on resize). It receives the\n * frames of the source panel through the \"-- Dashboard --\" data source:\n *   nodes frame: id, type, name, ...any attributes       (one row per object)\n *   edges frame: id, source, target, relation            (one row per relationship)\n * and draws them as a layered graph: containers at the top, the things they contain below.\n *\n * Available globals (from the plugin): htmlNode (the panel's shadow root), data, theme,\n * htmlGraphics (theme2, locationService, width, height, ...), getTemplateSrv, getLocationSrv.\n * No external libraries, no template literals (so nothing here looks like a Grafana variable).\n */\n(function () {\n  'use strict';\n\n  var rootEl = htmlNode.getElementById('estate');\n  if (!rootEl) { return; }\n\n  // State that must survive re-renders (zoom, selection, hidden types) lives on the shadow root.\n  var S = htmlNode.__estate;\n  if (!S) { S = htmlNode.__estate = { hidden: {}, selected: null, search: '', view: null, sig: '', bound: false }; }\n\n  // ---------------------------------------------------------------- theme\n  var hg = (typeof htmlGraphics !== 'undefined' && htmlGraphics) ? htmlGraphics : {};\n  var t2 = hg.theme2 || null;\n  var dark = t2 ? !!t2.isDark : !!(theme && theme.isDark);\n  var vars = t2 ? {\n    '--ink': t2.colors.text.primary, '--ink-2': t2.colors.text.secondary, '--muted': t2.colors.text.disabled,\n    '--line': t2.colors.border.medium, '--grid': t2.colors.border.weak,\n    '--surface': t2.colors.background.primary, '--surface-2': t2.colors.background.secondary,\n    '--accent': t2.colors.primary.text\n  } : (dark ? {\n    '--ink': '#f0efec', '--ink-2': '#c3c2b7', '--muted': '#898781', '--line': '#383835', '--grid': '#2c2c2a',\n    '--surface': '#181b1f', '--surface-2': '#22252b', '--accent': '#3987e5'\n  } : {\n    '--ink': '#0b0b0b', '--ink-2': '#52514e', '--muted': '#898781', '--line': '#c3c2b7', '--grid': '#e1e0d9',\n    '--surface': '#ffffff', '--surface-2': '#f4f5f5', '--accent': '#2a78d6'\n  });\n  Object.keys(vars).forEach(function (k) { rootEl.style.setProperty(k, vars[k]); });\n  rootEl.classList.toggle('dark', dark);\n  rootEl.classList.toggle('narrow', (hg.width || rootEl.clientWidth || 1000) < 640);\n\n  // Families group the many object types onto six categorical colours (fixed order, stepped per mode).\n  // The type name is always printed on the node, so colour is a redundant cue, never the only one.\n  var FAMILY = {\n    datacenter: 'site', zone: 'site',\n    subnet: 'network', firewall: 'network',\n    hardware_group: 'hardware', esxi_host: 'hardware', baremetal_host: 'hardware',\n    vsphere_cluster: 'virtualization', vm: 'virtualization',\n    ocp_cluster: 'openshift', ocp_node: 'openshift',\n    namespace: 'workload', pod: 'workload'\n  };\n  var FAMILY_ORDER = ['site', 'network', 'hardware', 'virtualization', 'openshift', 'workload', 'other'];\n  var SLOTS = dark\n    ? ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9']\n    : ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6'];\n  var TYPE_RANK = ['datacenter', 'zone', 'firewall', 'hardware_group', 'subnet', 'vsphere_cluster', 'esxi_host',\n    'baremetal_host', 'vm', 'ocp_cluster', 'ocp_node', 'namespace', 'pod'];\n  function familyOf(type) { return FAMILY[type] || 'other'; }\n  function colorOf(type) { return SLOTS[FAMILY_ORDER.indexOf(familyOf(type))]; }\n  function rankOf(type) { var i = TYPE_RANK.indexOf(type); return i < 0 ? TYPE_RANK.length : i; }\n\n  // ---------------------------------------------------------------- frames -> rows\n  function fieldValues(f) {\n    var v = f.values;\n    if (!v) { return []; }\n    if (typeof v.toArray === 'function') { return v.toArray(); }\n    return Array.prototype.slice.call(v);\n  }\n  function frameRows(frame) {\n    var cols = frame.fields.map(function (f) { return { name: f.name, vals: fieldValues(f) }; });\n    var n = typeof frame.length === 'number' ? frame.length : (cols[0] ? cols[0].vals.length : 0);\n    var rows = [];\n    for (var i = 0; i < n; i++) {\n      var r = {};\n      for (var c = 0; c < cols.length; c++) { r[cols[c].name] = cols[c].vals[i]; }\n      rows.push(r);\n    }\n    return rows;\n  }\n  var nodeRows = [], edgeRows = [];\n  ((data && data.series) || []).forEach(function (frame) {\n    var names = frame.fields.map(function (f) { return f.name; });\n    if (names.indexOf('source') >= 0 && names.indexOf('target') >= 0) { edgeRows = edgeRows.concat(frameRows(frame)); }\n    else if (names.indexOf('id') >= 0) { nodeRows = nodeRows.concat(frameRows(frame)); }\n  });\n\n  var all = {};\n  nodeRows.forEach(function (r) { if (r.id !== null && r.id !== undefined) { all[String(r.id)] = r; } });\n  var allEdges = edgeRows.filter(function (e) { return all[e.source] && all[e.target]; });\n  var allIds = Object.keys(all);\n\n  var rootId = '';\n  try { rootId = getTemplateSrv().replace('$root'); } catch (err) { rootId = ''; }\n  if (rootId === '$root') { rootId = ''; }\n\n  // ---------------------------------------------------------------- hidden types -> contracted graph\n  function contract(edgesIn, nodes, visible) {\n    var cur = edgesIn.map(function (e) { return { id: e.id, source: e.source, target: e.target, relation: e.relation, via: false }; });\n    Object.keys(nodes).forEach(function (h) {\n      if (visible[h]) { return; }\n      var ins = [], outs = [], rest = [];\n      cur.forEach(function (e) {\n        if (e.target === h) { ins.push(e); }\n        else if (e.source === h) { outs.push(e); }\n        else { rest.push(e); }\n      });\n      ins.forEach(function (a) {\n        outs.forEach(function (b) {\n          if (a.source === b.target) { return; }\n          rest.push({ id: 'via:' + a.source + '>' + h + '>' + b.target, source: a.source, target: b.target, relation: 'via ' + nodes[h].type, via: true });\n        });\n      });\n      cur = rest;\n    });\n    var seen = {};\n    return cur.filter(function (e) {\n      var k = e.source + '>' + e.target;\n      if (seen[k] || !visible[e.source] || !visible[e.target]) { return false; }\n      seen[k] = true;\n      return true;\n    });\n  }\n\n  // ---------------------------------------------------------------- layout (layered DAG)\n  var measureCtx = null;\n  function textWidth(s, px, bold) {\n    try {\n      if (!measureCtx) { measureCtx = document.createElement('canvas').getContext('2d'); }\n      measureCtx.font = (bold ? '600 ' : '') + px + 'px Inter, system-ui, sans-serif';\n      return measureCtx.measureText(s).width;\n    } catch (err) { return s.length * px * 0.6; }\n  }\n  function layout(ids, edges) {\n    var out = {}, inc = {};\n    ids.forEach(function (id) { out[id] = []; inc[id] = []; });\n    edges.forEach(function (e) { out[e.source].push(e.target); inc[e.target].push(e.source); });\n\n    // Depth-first search gives a topological order and finds back edges (which break cycles).\n    var state = {}, order = [], back = {};\n    ids.forEach(function (start) {\n      if (state[start]) { return; }\n      var stack = [[start, 0]];\n      state[start] = 1;\n      while (stack.length) {\n        var top = stack[stack.length - 1], u = top[0];\n        if (top[1] < out[u].length) {\n          var v = out[u][top[1]++];\n          if (!state[v]) { state[v] = 1; stack.push([v, 0]); }\n          else if (state[v] === 1) { back[u + '>' + v] = true; }\n        } else { state[u] = 2; order.push(u); stack.pop(); }\n      }\n    });\n    order.reverse();\n    var rank = {};\n    ids.forEach(function (id) { rank[id] = 0; });\n    order.forEach(function (u) {\n      out[u].forEach(function (v) { if (!back[u + '>' + v]) { rank[v] = Math.max(rank[v], rank[u] + 1); } });\n    });\n    var layers = [];\n    ids.forEach(function (id) { (layers[rank[id]] = layers[rank[id]] || []).push(id); });\n    for (var r = 0; r < layers.length; r++) { if (!layers[r]) { layers[r] = []; } }\n\n    // Initial order by type then name; then barycenter sweeps to reduce crossings.\n    var pos = {};\n    function byTypeName(a, b) {\n      return rankOf(all[a].type) - rankOf(all[b].type) || String(all[a].name).localeCompare(String(all[b].name));\n    }\n    layers.forEach(function (L) { L.sort(byTypeName); L.forEach(function (id, i) { pos[id] = i; }); });\n    for (var sweep = 0; sweep < 6; sweep++) {\n      var down = sweep % 2 === 0;\n      for (var li = down ? 1 : layers.length - 2; down ? li < layers.length : li >= 0; li += down ? 1 : -1) {\n        var L = layers[li], bary = {};\n        L.forEach(function (id) {\n          var nb = (down ? inc[id] : out[id]).filter(function (x) { return rank[x] === (down ? li - 1 : li + 1); });\n          var sum = 0;\n          nb.forEach(function (x) { sum += pos[x]; });\n          bary[id] = nb.length ? sum / nb.length : pos[id];\n        });\n        L.sort(function (a, b) { return bary[a] - bary[b] || byTypeName(a, b); });\n        L.forEach(function (id, i) { pos[id] = i; });\n      }\n    }\n\n    // Coordinates. A layer wider than MAXW is folded into interleaved sub-rows so the\n    // picture stays roughly as wide as it is tall (and the fit-to-panel zoom stays readable).\n    var GAP = 16, H = 46, VGAP = 50, SUBGAP = 10, MAXW = 1400, coords = {}, y = 0;\n    layers.forEach(function (L) {\n      var widths = L.map(function (id) {\n        var n = all[id];\n        return Math.max(110, Math.min(240, Math.max(textWidth(String(n.name), 12, true), textWidth(String(n.type), 10)) + 30));\n      });\n      var total = widths.reduce(function (s, w) { return s + w; }, 0) + GAP * Math.max(0, L.length - 1);\n      var rows = Math.max(1, Math.ceil(total / MAXW)), rowX = [], k;\n      for (k = 0; k < rows; k++) { rowX.push(0); }\n      L.forEach(function (id, i) { rowX[i % rows] += widths[i] + GAP; });\n      for (k = 0; k < rows; k++) { rowX[k] = -(rowX[k] - GAP) / 2; }\n      L.forEach(function (id, i) {\n        k = i % rows;\n        coords[id] = { x: rowX[k] + widths[i] / 2, y: y + k * (H + SUBGAP), w: widths[i], h: H };\n        rowX[k] += widths[i] + GAP;\n      });\n      y += rows * (H + SUBGAP) - SUBGAP + VGAP;\n    });\n    return coords;\n  }\n\n  // ---------------------------------------------------------------- rendering\n  var NS = 'http://www.w3.org/2000/svg';\n  function el(tag, attrs, parent) {\n    var e = document.createElementNS(NS, tag);\n    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });\n    if (parent) { parent.appendChild(e); }\n    return e;\n  }\n  function h(tag, cls, text, parent) {\n    var e = document.createElement(tag);\n    if (cls) { e.className = cls; }\n    if (text !== undefined && text !== null) { e.textContent = String(text); }\n    if (parent) { parent.appendChild(e); }\n    return e;\n  }\n  function edgePath(a, b) {\n    var x1 = a.x, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y - b.h / 2;\n    if (y2 > y1) {\n      var my = (y2 - y1) / 2;\n      return 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + (y1 + my) + ' ' + x2 + ',' + (y2 - my) + ' ' + x2 + ',' + y2;\n    }\n    // Backward or same-row edge: loop out to the side.\n    var sx = a.x + a.w / 2, tx = b.x + b.w / 2, dx = 48;\n    return 'M' + sx + ',' + a.y + ' C' + (sx + dx) + ',' + a.y + ' ' + (tx + dx) + ',' + b.y + ' ' + tx + ',' + b.y;\n  }\n  function fmt(v) {\n    if (v === null || v === undefined || v === '') { return ''; }\n    if (typeof v === 'number') { return Number.isInteger(v) ? String(v) : v.toFixed(1); }\n    return String(v);\n  }\n  function matches(n, q) {\n    if (!q) { return true; }\n    return String(n.name).toLowerCase().indexOf(q) >= 0 || String(n.id).toLowerCase().indexOf(q) >= 0 || String(n.type).toLowerCase().indexOf(q) >= 0;\n  }\n\n  var svg = htmlNode.getElementById('estate-svg');\n  var view = htmlNode.getElementById('estate-view');\n  var side = htmlNode.getElementById('estate-side');\n  var legend = htmlNode.getElementById('estate-legend');\n  var emptyMsg = htmlNode.getElementById('estate-empty');\n  var crumb = htmlNode.getElementById('estate-root');\n  var countEl = htmlNode.getElementById('estate-count');\n  var searchEl = htmlNode.getElementById('estate-search');\n\n  function applyView() {\n    var v = S.view || { k: 1, tx: 0, ty: 0 };\n    view.setAttribute('transform', 'translate(' + v.tx + ',' + v.ty + ') scale(' + v.k + ')');\n  }\n  function fit(coords) {\n    var ids = Object.keys(coords);\n    if (!ids.length) { S.view = { k: 1, tx: 0, ty: 0 }; applyView(); return; }\n    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;\n    ids.forEach(function (id) {\n      var c = coords[id];\n      minX = Math.min(minX, c.x - c.w / 2); maxX = Math.max(maxX, c.x + c.w / 2);\n      minY = Math.min(minY, c.y - c.h / 2); maxY = Math.max(maxY, c.y + c.h / 2);\n    });\n    var cw = svg.clientWidth || (hg.width || 800) - 280, ch = svg.clientHeight || (hg.height || 500) - 70, pad = 24;\n    var k = Math.min((cw - pad * 2) / Math.max(1, maxX - minX), (ch - pad * 2) / Math.max(1, maxY - minY), 1.4);\n    S.view = { k: k, tx: cw / 2 - k * (minX + maxX) / 2, ty: ch / 2 - k * (minY + maxY) / 2 };\n    applyView();\n  }\n\n  function setRoot(id) {\n    if (hg.locationService && typeof hg.locationService.partial === 'function') { hg.locationService.partial({ 'var-root': id }, false); return; }\n    if (typeof getLocationSrv === 'function') { getLocationSrv().update({ query: { 'var-root': id }, partial: true }); return; }\n    var u = new URL(window.location.href);\n    u.searchParams.set('var-root', id);\n    window.location.href = u.toString();\n  }\n\n  function renderSide() {\n    while (side.firstChild) { side.removeChild(side.firstChild); }\n    var n = S.selected ? all[S.selected] : null;\n    rootEl.classList.toggle('has-selection', !!n);\n    if (!n) {\n      h('div', 'hint', 'Click a node for its details and relations. Double-click (or \"make root\") to re-centre the whole dashboard on it. Scroll to zoom, drag to pan, click a legend chip to hide a type.', side);\n      return;\n    }\n    h('h3', null, n.name, side);\n    var pill = h('span', 'pill', null, side);\n    var dot = h('i', null, null, pill);\n    dot.style.background = colorOf(n.type);\n    pill.appendChild(document.createTextNode(n.type + (n.id === rootId ? ' · current root' : '')));\n    var actions = h('div', 'actions', null, side);\n    var mk = h('button', null, 'make root', actions);\n    mk.type = 'button';\n    mk.title = 'Set the $root variable to this object; every panel re-queries';\n    mk.addEventListener('click', function () { setRoot(n.id); });\n    var tbl = h('table', null, null, side);\n    // Node-Graph alias columns (title, subtitle, mainstat, detail__*) duplicate real attributes; skip them.\n    var skip = { id: 1, type: 1, name: 1, title: 1, subtitle: 1, mainstat: 1, secondarystat: 1 };\n    Object.keys(n).forEach(function (k) {\n      if (skip[k] || k.indexOf('detail__') === 0 || n[k] === null || n[k] === undefined || n[k] === '') { return; }\n      var tr = h('tr', null, null, tbl);\n      h('td', null, k, tr);\n      h('td', typeof n[k] === 'number' ? 'num' : null, fmt(n[k]), tr);\n    });\n    var tr = h('tr', null, null, tbl);\n    h('td', null, 'id', tr);\n    h('td', null, n.id, tr);\n    var rels = allEdges.filter(function (e) { return e.source === n.id || e.target === n.id; });\n    if (rels.length) {\n      h('h4', null, 'relations (' + rels.length + ')', side);\n      rels.sort(function (a, b) {\n        var oa = a.source === n.id ? 1 : 0, ob = b.source === n.id ? 1 : 0;\n        return oa - ob || a.relation.localeCompare(b.relation) || String(all[a.source === n.id ? a.target : a.source].name).localeCompare(String(all[b.source === n.id ? b.target : b.source].name));\n      });\n      rels.forEach(function (e) {\n        var outgoing = e.source === n.id, other = all[outgoing ? e.target : e.source];\n        var row = h('div', 'rel', null, side);\n        h('span', 'arrow', outgoing ? '→' : '←', row);\n        h('span', 'what', e.relation, row);\n        var who = h('span', 'who' + (S.hidden[other.type] ? ' hidden-type' : ''), other.name + ' [' + other.type + ']', row);\n        who.title = other.id;\n        row.addEventListener('click', function () {\n          if (S.hidden[other.type]) { delete S.hidden[other.type]; }\n          S.selected = other.id;\n          S.render();\n        });\n      });\n    }\n  }\n\n  function render() {\n    var visible = {};\n    allIds.forEach(function (id) { if (!S.hidden[all[id].type]) { visible[id] = all[id]; } });\n    var ids = Object.keys(visible);\n    var edges = contract(allEdges, all, visible);\n    var coords = layout(ids, edges);\n\n    // Header\n    while (crumb.firstChild) { crumb.removeChild(crumb.firstChild); }\n    var rootNode = rootId && all[rootId];\n    crumb.appendChild(document.createTextNode(rootNode ? rootNode.name : (rootId || 'whole estate')));\n    if (rootNode) { h('span', 'dim', ' [' + rootNode.type + ']', crumb); }\n    countEl.textContent = ids.length + ' of ' + allIds.length + ' objects · ' + edges.length + ' relations';\n    emptyMsg.hidden = allIds.length > 0;\n\n    // Graph\n    while (view.firstChild) { view.removeChild(view.firstChild); }\n    S.els = { nodes: {}, edges: [] };\n    var edgeLayer = el('g', { 'class': 'edges' }, view), nodeLayer = el('g', { 'class': 'nodes' }, view);\n    edges.forEach(function (e) {\n      var p = el('path', { d: edgePath(coords[e.source], coords[e.target]), 'class': 'edge' + (e.via ? ' via' : '') }, edgeLayer);\n      el('title', {}, p).textContent = all[e.source].name + ' ' + e.relation + ' ' + all[e.target].name;\n      S.els.edges.push({ el: p, source: e.source, target: e.target });\n    });\n    ids.forEach(function (id) {\n      var n = visible[id], c = coords[id];\n      var g = el('g', { 'class': 'node' + (id === rootId ? ' root' : ''), transform: 'translate(' + (c.x - c.w / 2) + ',' + (c.y - c.h / 2) + ')', 'data-id': id }, nodeLayer);\n      var color = colorOf(n.type);\n      var box = el('rect', { 'class': 'box', width: c.w, height: c.h, rx: 6 }, g);\n      el('rect', { 'class': 'bar', x: 0, y: 0, width: 5, height: c.h, rx: 2, fill: color }, g);\n      var label = String(n.name), maxW = c.w - 20;\n      while (label.length > 3 && textWidth(label, 12, true) > maxW) { label = label.slice(0, -2) + '…'; }\n      el('text', { x: 12, y: 19 }, g).textContent = label;\n      el('text', { 'class': 'type', x: 12, y: 33 }, g).textContent = n.type + (n.status ? ' · ' + n.status : '');\n      var pct = n.cpu_used_pct;\n      if (typeof pct === 'number' && !isNaN(pct)) {\n        el('rect', { 'class': 'meter-track', x: 12, y: c.h - 7, width: c.w - 20, height: 3, rx: 1.5 }, g);\n        el('rect', { 'class': 'meter', x: 12, y: c.h - 7, width: Math.max(0, Math.min(1, pct / 100)) * (c.w - 20), height: 3, rx: 1.5 }, g);\n      }\n      var tip = n.name + ' [' + n.type + ']';\n      ['os', 'version', 'status', 'ip', 'cidr', 'cpu_cores', 'mem_gb', 'cpu_used_pct', 'mem_used_pct', 'node_count', 'pod_count', 'vm_count'].forEach(function (k) {\n        if (n[k] !== null && n[k] !== undefined && n[k] !== '') { tip += '\\n' + k + ': ' + fmt(n[k]); }\n      });\n      el('title', {}, g).textContent = tip;\n      S.els.nodes[id] = { el: g, box: box, color: color, node: n };\n    });\n\n    // Legend: one chip per type present, with its count; click to hide/show the type.\n    while (legend.firstChild) { legend.removeChild(legend.firstChild); }\n    var counts = {};\n    allIds.forEach(function (id) { counts[all[id].type] = (counts[all[id].type] || 0) + 1; });\n    Object.keys(counts).sort(function (a, b) { return rankOf(a) - rankOf(b) || a.localeCompare(b); }).forEach(function (type) {\n      var chip = h('span', 'chip' + (S.hidden[type] ? ' off' : ''), null, legend);\n      var sw = h('i', null, null, chip);\n      sw.style.background = colorOf(type);\n      chip.appendChild(document.createTextNode(type + ' '));\n      h('b', null, counts[type], chip);\n      chip.title = (S.hidden[type] ? 'show ' : 'hide ') + type;\n      chip.addEventListener('click', function () {\n        if (S.hidden[type]) { delete S.hidden[type]; } else { S.hidden[type] = true; }\n        S.render();\n      });\n    });\n\n    applyState();\n\n    var sig = ids.join('|');\n    if (!S.view || sig !== S.sig) { S.sig = sig; fit(coords); } else { applyView(); }\n    S.coords = coords;\n  }\n  // Selection, neighbour highlighting and search are class toggles on the existing elements.\n  // Rebuilding the SVG on every click would swap the element under the pointer and break double-click.\n  function applyState() {\n    var q = (S.search || '').trim().toLowerCase();\n    var els = S.els || { nodes: {}, edges: [] };\n    var sel = S.selected && els.nodes[S.selected] ? S.selected : null;\n    var neighbours = {};\n    if (sel) {\n      neighbours[sel] = true;\n      els.edges.forEach(function (e) { if (e.source === sel) { neighbours[e.target] = true; } if (e.target === sel) { neighbours[e.source] = true; } });\n    }\n    els.edges.forEach(function (e) {\n      var touches = !!sel && (e.source === sel || e.target === sel);\n      e.el.classList.toggle('hl', touches);\n      e.el.classList.toggle('dim', !!sel && !touches);\n    });\n    Object.keys(els.nodes).forEach(function (id) {\n      var x = els.nodes[id], isSel = id === sel, hit = !!q && matches(x.node, q);\n      x.el.classList.toggle('selected', isSel);\n      x.el.classList.toggle('dim', !!sel && !isSel && !neighbours[id]);\n      x.el.classList.toggle('hit', hit);\n      x.el.classList.toggle('hidden-by-search', !!q && !hit);\n      x.box.style.stroke = (isSel || id === rootId) ? x.color : '';\n    });\n    renderSide();\n  }\n  S.render = render;\n  S.applyState = applyState;\n\n  // ---------------------------------------------------------------- interactions (bound once per shadow root)\n  if (!S.bound) {\n    S.bound = true;\n    var drag = null;\n    svg.addEventListener('wheel', function (ev) {\n      ev.preventDefault();\n      var v = S.view || { k: 1, tx: 0, ty: 0 }, rect = svg.getBoundingClientRect();\n      var px = ev.clientX - rect.left, py = ev.clientY - rect.top;\n      var factor = Math.exp(-ev.deltaY * 0.0015), k = Math.max(0.15, Math.min(4, v.k * factor));\n      S.view = { k: k, tx: px - (px - v.tx) * (k / v.k), ty: py - (py - v.ty) * (k / v.k) };\n      applyView();\n    }, { passive: false });\n    svg.addEventListener('pointerdown', function (ev) {\n      if (ev.button !== 0) { return; }\n      var v = S.view || { k: 1, tx: 0, ty: 0 };\n      drag = { x: ev.clientX, y: ev.clientY, tx: v.tx, ty: v.ty, moved: false, target: ev.target };\n      svg.setPointerCapture(ev.pointerId);\n      svg.classList.add('panning');\n    });\n    svg.addEventListener('pointermove', function (ev) {\n      if (!drag) { return; }\n      var dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;\n      if (Math.abs(dx) + Math.abs(dy) > 3) { drag.moved = true; }\n      if (drag.moved) { S.view = { k: (S.view || { k: 1 }).k, tx: drag.tx + dx, ty: drag.ty + dy }; applyView(); }\n    });\n    svg.addEventListener('pointerup', function (ev) {\n      if (!drag) { return; }\n      svg.classList.remove('panning');\n      var moved = drag.moved, target = drag.target;\n      drag = null;\n      if (moved) { return; }\n      var g = target && target.closest ? target.closest('.node') : null;\n      var id = g ? g.getAttribute('data-id') : null, now = Date.now();\n      // Double-click is detected here rather than with the native event: pointer capture during the\n      // drag retargets the native dblclick to the svg element, so it never sees the node.\n      if (id && S.lastClick && S.lastClick.id === id && now - S.lastClick.t < 450) {\n        S.lastClick = null;\n        setRoot(id);\n        return;\n      }\n      S.lastClick = { id: id, t: now };\n      S.selected = id;\n      S.applyState();\n    });\n    htmlNode.getElementById('estate-fit').addEventListener('click', function () { fit(S.coords || {}); });\n    htmlNode.getElementById('estate-clear').addEventListener('click', function () {\n      S.selected = null; S.search = ''; searchEl.value = ''; S.applyState();\n    });\n    searchEl.addEventListener('input', function () { S.search = searchEl.value; S.applyState(); });\n    htmlNode.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { S.selected = null; S.applyState(); } });\n  }\n\n  render();\n})();\n",
+        "onInit": "",
+        "onInitOnResize": false,
+        "dynamicData": false,
+        "dynamicFieldDisplayValues": false,
+        "dynamicProps": false,
+        "dynamicHtmlGraphics": false,
+        "codeData": "{}",
+        "importedPanelOptions": ""
+      }
+    },
+    {
+      "id": 9,
+      "type": "row",
+      "title": "Details",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      }
+    },
+    {
+      "id": 1,
+      "type": "table",
+      "title": "Objects in view",
+      "description": "SOURCE PANEL: the only panel that calls the API (two queries against /traverse: nodes and edges). Every other panel reads these rows through the built-in Dashboard data source. Use the column filters (funnel icons) to answer granular questions, e.g. type = vm to see every VM and its OS.",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY}"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "url": "/traverse?root=${root}&depth=${depth}&direction=${direction}",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "root_selector": "$.nodes",
+          "columns": [
+            {
+              "selector": "id",
+              "text": "id",
+              "type": "string"
+            },
+            {
+              "selector": "type",
+              "text": "type",
+              "type": "string"
+            },
+            {
+              "selector": "name",
+              "text": "name",
+              "type": "string"
+            },
+            {
+              "selector": "depth",
+              "text": "depth",
+              "type": "number"
+            },
+            {
+              "selector": "datacenter",
+              "text": "datacenter",
+              "type": "string"
+            },
+            {
+              "selector": "cluster",
+              "text": "cluster",
+              "type": "string"
+            },
+            {
+              "selector": "namespace",
+              "text": "namespace",
+              "type": "string"
+            },
+            {
+              "selector": "status",
+              "text": "status",
+              "type": "string"
+            },
+            {
+              "selector": "os",
+              "text": "os",
+              "type": "string"
+            },
+            {
+              "selector": "version",
+              "text": "version",
+              "type": "string"
+            },
+            {
+              "selector": "role",
+              "text": "role",
+              "type": "string"
+            },
+            {
+              "selector": "ip",
+              "text": "ip",
+              "type": "string"
+            },
+            {
+              "selector": "cidr",
+              "text": "cidr",
+              "type": "string"
+            },
+            {
+              "selector": "vendor",
+              "text": "vendor",
+              "type": "string"
+            },
+            {
+              "selector": "model",
+              "text": "model",
+              "type": "string"
+            },
+            {
+              "selector": "platform",
+              "text": "platform",
+              "type": "string"
+            },
+            {
+              "selector": "env",
+              "text": "env",
+              "type": "string"
+            },
+            {
+              "selector": "owner_team",
+              "text": "owner_team",
+              "type": "string"
+            },
+            {
+              "selector": "app",
+              "text": "app",
+              "type": "string"
+            },
+            {
+              "selector": "cpu_cores",
+              "text": "cpu_cores",
+              "type": "number"
+            },
+            {
+              "selector": "mem_gb",
+              "text": "mem_gb",
+              "type": "number"
+            },
+            {
+              "selector": "cpu_used_pct",
+              "text": "cpu_used_pct",
+              "type": "number"
+            },
+            {
+              "selector": "mem_used_pct",
+              "text": "mem_used_pct",
+              "type": "number"
+            },
+            {
+              "selector": "node_count",
+              "text": "node_count",
+              "type": "number"
+            },
+            {
+              "selector": "pod_count",
+              "text": "pod_count",
+              "type": "number"
+            },
+            {
+              "selector": "vm_count",
+              "text": "vm_count",
+              "type": "number"
+            },
+            {
+              "selector": "host_count",
+              "text": "host_count",
+              "type": "number"
+            },
+            {
+              "selector": "name",
+              "text": "title",
+              "type": "string"
+            },
+            {
+              "selector": "type",
+              "text": "subtitle",
+              "type": "string"
+            },
+            {
+              "selector": "cpu_used_pct",
+              "text": "mainstat",
+              "type": "number"
+            },
+            {
+              "selector": "mem_used_pct",
+              "text": "secondarystat",
+              "type": "number"
+            },
+            {
+              "selector": "os",
+              "text": "detail__os",
+              "type": "string"
+            },
+            {
+              "selector": "version",
+              "text": "detail__version",
+              "type": "string"
+            },
+            {
+              "selector": "status",
+              "text": "detail__status",
+              "type": "string"
+            },
+            {
+              "selector": "ip",
+              "text": "detail__ip",
+              "type": "string"
+            },
+            {
+              "selector": "cidr",
+              "text": "detail__cidr",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY}"
+          },
+          "type": "json",
+          "source": "url",
+          "parser": "backend",
+          "format": "table",
+          "url": "/traverse?root=${root}&depth=${depth}&direction=${direction}",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "root_selector": "$.edges",
+          "columns": [
+            {
+              "selector": "id",
+              "text": "id",
+              "type": "string"
+            },
+            {
+              "selector": "source",
+              "text": "source",
+              "type": "string"
+            },
+            {
+              "selector": "target",
+              "text": "target",
+              "type": "string"
+            },
+            {
+              "selector": "relation",
+              "text": "relation",
+              "type": "string"
+            },
+            {
+              "selector": "relation",
+              "text": "mainstat",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "title": true,
+              "subtitle": true,
+              "mainstat": true,
+              "secondarystat": true,
+              "detail__os": true,
+              "detail__version": true,
+              "detail__status": true,
+              "detail__ip": true,
+              "detail__cidr": true
+            },
+            "renameByName": {},
+            "indexByName": {
+              "type": 0,
+              "name": 1,
+              "datacenter": 2,
+              "cluster": 3,
+              "namespace": 4,
+              "status": 5,
+              "os": 6,
+              "version": 7,
+              "role": 8,
+              "ip": 9,
+              "cidr": 10,
+              "cpu_cores": 11,
+              "mem_gb": 12,
+              "cpu_used_pct": 13,
+              "mem_used_pct": 14,
+              "node_count": 15,
+              "pod_count": 16,
+              "vm_count": 17,
+              "host_count": 18,
+              "vendor": 19,
+              "model": 20,
+              "platform": 21,
+              "env": 22,
+              "owner_team": 23,
+              "app": 24,
+              "depth": 25,
+              "id": 26
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 13,
+        "w": 14,
+        "x": 0,
+        "y": 26
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/_pct$/"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 120
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": true,
+          "reducer": [
+            "count"
+          ],
+          "countRows": false,
+          "fields": [
+            "name"
+          ]
+        },
+        "sortBy": [
+          {
+            "displayName": "type",
+            "desc": false
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "type": "bargauge",
+      "title": "Host utilisation (CPU, memory)",
+      "description": "ESXi and bare-metal hosts in view, from the same rows. Each bar is one host and one measure (the display-name override reads the host name from the row). Colour thresholds: 70% warning, 85% critical.",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByRefId",
+          "options": {
+            "include": "A"
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "fieldName": "type",
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": "^(esxi_host|baremetal_host)$"
+                  }
+                }
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "id": true,
+              "type": true,
+              "depth": true,
+              "datacenter": true,
+              "cluster": true,
+              "namespace": true,
+              "status": true,
+              "os": true,
+              "version": true,
+              "role": true,
+              "ip": true,
+              "cidr": true,
+              "vendor": true,
+              "model": true,
+              "platform": true,
+              "env": true,
+              "owner_team": true,
+              "app": true,
+              "cpu_cores": true,
+              "mem_gb": true,
+              "node_count": true,
+              "pod_count": true,
+              "vm_count": true,
+              "host_count": true,
+              "title": true,
+              "subtitle": true,
+              "mainstat": true,
+              "secondarystat": true,
+              "detail__os": true,
+              "detail__version": true,
+              "detail__status": true,
+              "detail__ip": true,
+              "detail__cidr": true
+            },
+            "indexByName": {
+              "name": 0,
+              "cpu_used_pct": 1,
+              "mem_used_pct": 2
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 13,
+        "w": 10,
+        "x": 14,
+        "y": 26
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cpu_used_pct"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "${__data.fields.name} cpu"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "mem_used_pct"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "${__data.fields.name} memory"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "valueMode": "color",
+        "namePlacement": "auto",
+        "showUnfilled": true,
+        "sizing": "auto",
+        "minVizWidth": 8,
+        "minVizHeight": 16,
+        "maxVizHeight": 300,
+        "text": {},
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false,
+          "calcs": []
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "nodeGraph",
+      "title": "Topology (built-in Node Graph, no custom code)",
+      "description": "The same nodes and edges in Grafana's stock Node Graph panel. It reads fixed field names (id, title, subtitle, mainstat, detail__*), so the source queries emit those as extra alias columns. Fine for a few hundred objects; the custom panel above scales and explains better.",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 1,
+          "refId": "A",
+          "withTransforms": false
+        }
+      ],
+      "transformations": [],
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "nodes": {
+          "mainStatUnit": "%",
+          "secondaryStatUnit": "%"
+        },
+        "edges": {
+          "mainStatUnit": "",
+          "secondaryStatUnit": ""
+        },
+        "zoomMode": "cooperative",
+        "layoutAlgorithm": "layered"
+      }
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "estate",
+    "topology",
+    "infrastructure",
+    "openshift",
+    "vmware"
+  ],
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "DS_INFINITY",
+        "label": "Estate API",
+        "query": "yesoreyeram-infinity-datasource",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false
+      },
+      {
+        "type": "query",
+        "name": "root",
+        "label": "Root",
+        "description": "Where the relationship walk starts. Any object can be a root; this list offers the usual starting points.",
+        "datasource": {
+          "type": "yesoreyeram-infinity-datasource",
+          "uid": "${DS_INFINITY}"
+        },
+        "definition": "GET /nodes?type=datacenter,zone,subnet,hardware_group,vsphere_cluster,esxi_host,baremetal_host,ocp_cluster,namespace",
+        "query": {
+          "queryType": "infinity",
+          "query": "",
+          "infinityQuery": {
+            "refId": "variable",
+            "type": "json",
+            "source": "url",
+            "parser": "backend",
+            "format": "table",
+            "url": "/nodes?type=datacenter,zone,subnet,hardware_group,vsphere_cluster,esxi_host,baremetal_host,ocp_cluster,namespace",
+            "url_options": {
+              "method": "GET",
+              "data": ""
+            },
+            "root_selector": "",
+            "columns": [
+              {
+                "selector": "label",
+                "text": "__text",
+                "type": "string"
+              },
+              {
+                "selector": "id",
+                "text": "__value",
+                "type": "string"
+              }
+            ],
+            "filters": [],
+            "global_query_id": ""
+          }
+        },
+        "current": {
+          "selected": true,
+          "text": "East DC  [datacenter]",
+          "value": "dc-east"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0
+      },
+      {
+        "type": "custom",
+        "name": "depth",
+        "label": "Depth (hops)",
+        "description": "How many relationship hops to follow from the root. 'all' walks to the end.",
+        "query": "all,1,2,3,4,6",
+        "current": {
+          "selected": true,
+          "text": "all",
+          "value": "all"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "all",
+            "value": "all"
+          },
+          {
+            "selected": false,
+            "text": "1",
+            "value": "1"
+          },
+          {
+            "selected": false,
+            "text": "2",
+            "value": "2"
+          },
+          {
+            "selected": false,
+            "text": "3",
+            "value": "3"
+          },
+          {
+            "selected": false,
+            "text": "4",
+            "value": "4"
+          },
+          {
+            "selected": false,
+            "text": "6",
+            "value": "6"
+          }
+        ],
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "skipUrlSync": false
+      },
+      {
+        "type": "custom",
+        "name": "direction",
+        "label": "Direction",
+        "description": "down: what the root contains or provides. up: what the root depends on. both: everything near it (fans out quickly).",
+        "query": "down,up,both",
+        "current": {
+          "selected": true,
+          "text": "down",
+          "value": "down"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "down",
+            "value": "down"
+          },
+          {
+            "selected": false,
+            "text": "up",
+            "value": "up"
+          },
+          {
+            "selected": false,
+            "text": "both",
+            "value": "both"
+          }
+        ],
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "skipUrlSync": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": true
+  },
+  "timezone": "",
+  "title": "Estate / Explorer",
+  "uid": "estate-explorer",
+  "version": 1,
+  "weekStart": ""
+}

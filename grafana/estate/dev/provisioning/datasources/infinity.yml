@@ -1,0 +1,16 @@
+# Infinity data source pointed at the mock estate API.
+# For the real thing: change `url` (and allowedHosts) to the real API and add auth_method
+# (bearerToken / basicAuth / apiKey / oauth2) plus secureJsonData. Dashboard queries use
+# URLs relative to this base, so the dashboard JSON stays the same for mock and production.
+apiVersion: 1
+datasources:
+  - name: Estate API
+    uid: infinity-estate
+    type: yesoreyeram-infinity-datasource
+    url: http://mock-api:8099
+    editable: true
+    jsonData:
+      auth_method: none
+      timeoutInSeconds: 30
+      allowedHosts:
+        - http://mock-api:8099

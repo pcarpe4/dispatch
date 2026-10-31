@@ -1,0 +1,69 @@
+/* Estate topology panel. Colours come from CSS variables set by estate-graph.js from the Grafana theme. */
+* { box-sizing: border-box; }
+.estate {
+  --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781; --line: #c3c2b7; --grid: #e1e0d9;
+  --surface: #ffffff; --surface-2: #f4f5f5; --accent: #2a78d6;
+  display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0;
+  color: var(--ink); font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 12px;
+  overflow: hidden;
+}
+.toolbar { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-bottom: 1px solid var(--grid); flex: 0 0 auto; }
+.toolbar .crumb { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.toolbar .crumb .dim { color: var(--ink-2); font-weight: 400; }
+.toolbar input { flex: 1 1 120px; min-width: 80px; font: inherit; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+.toolbar button { font: inherit; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+.toolbar button:hover { border-color: var(--accent); }
+.toolbar .count { color: var(--ink-2); white-space: nowrap; }
+.body { display: flex; flex: 1 1 auto; min-height: 0; position: relative; }
+.canvas { flex: 1 1 auto; min-width: 0; position: relative; }
+.canvas svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.canvas svg.panning { cursor: grabbing; }
+.empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--ink-2); }
+.empty[hidden] { display: none; }
+.side { flex: 0 0 270px; max-width: 45%; border-left: 1px solid var(--grid); overflow: auto; padding: 8px 10px; background: var(--surface); }
+.estate.narrow .side { position: absolute; right: 0; top: 0; bottom: 0; width: 270px; display: none; box-shadow: -4px 0 12px rgba(0,0,0,0.15); }
+.estate.narrow.has-selection .side { display: block; }
+.side .hint { color: var(--ink-2); line-height: 1.4; }
+.side h3 { margin: 0 0 2px; font-size: 14px; word-break: break-all; }
+.side .pill { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); color: var(--ink-2); margin: 0 0 8px; }
+.side .pill i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.side .actions { display: flex; gap: 6px; margin: 4px 0 10px; }
+.side .actions button { font: inherit; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+.side .actions button:hover { border-color: var(--accent); }
+.side table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+.side td { padding: 2px 4px; vertical-align: top; border-bottom: 1px solid var(--grid); word-break: break-word; }
+.side td:first-child { color: var(--ink-2); white-space: nowrap; width: 38%; }
+.side td.num { font-variant-numeric: tabular-nums; }
+.side h4 { margin: 8px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-2); }
+.side .rel { display: flex; align-items: baseline; gap: 6px; padding: 2px 0; cursor: pointer; border-radius: 3px; }
+.side .rel:hover { background: var(--surface-2); }
+.side .rel .arrow { color: var(--muted); flex: 0 0 auto; }
+.side .rel .what { color: var(--ink-2); flex: 0 0 auto; }
+.side .rel .who { font-weight: 600; word-break: break-all; }
+.side .rel .who.hidden-type { font-weight: 400; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 8px; padding: 4px 6px; border-top: 1px solid var(--grid); flex: 0 0 auto; }
+.legend .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-2); cursor: pointer; user-select: none; padding: 1px 4px; border-radius: 3px; }
+.legend .chip:hover { background: var(--surface-2); }
+.legend .chip i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; }
+.legend .chip b { color: var(--ink); font-weight: 600; }
+.legend .chip.off { text-decoration: line-through; opacity: 0.55; }
+.legend .chip.off i { background: transparent !important; outline: 1px solid var(--line); }
+/* SVG */
+.edge { fill: none; stroke: var(--line); stroke-width: 1.2; marker-end: url(#estate-arrow); }
+.edge.via { stroke-dasharray: 4 3; }
+.edge.hl { stroke: var(--ink); stroke-width: 2; }
+.edge.dim { opacity: 0.12; }
+.arrow { fill: var(--line); }
+.node { cursor: pointer; }
+.node .box { fill: var(--surface); stroke: var(--line); stroke-width: 1; rx: 6; }
+.node:hover .box { stroke: var(--ink-2); }
+.node.selected .box { stroke-width: 2.5; }
+.node.root .box { stroke-width: 2; }
+.node .bar { rx: 3; }
+.node text { fill: var(--ink); font-size: 12px; font-weight: 600; pointer-events: none; }
+.node text.type { fill: var(--ink-2); font-size: 10px; font-weight: 400; }
+.node .meter-track { fill: var(--grid); }
+.node .meter { fill: var(--ink-2); }
+.node.dim { opacity: 0.18; }
+.node.hit .box { stroke: var(--accent); stroke-width: 2.5; }
+.node.hidden-by-search { opacity: 0.18; }

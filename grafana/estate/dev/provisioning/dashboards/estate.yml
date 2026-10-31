@@ -1,0 +1,12 @@
+# Loads grafana/dashboards/estate/*.json straight from the repo checkout (mounted read-only).
+# Edit the dashboard source, rebuild, and Grafana picks the change up within 10 seconds.
+apiVersion: 1
+providers:
+  - name: estate
+    folder: Estate
+    folderUid: estate
+    type: file
+    allowUiUpdates: false
+    updateIntervalSeconds: 10
+    options:
+      path: /var/lib/grafana/dashboards/estate

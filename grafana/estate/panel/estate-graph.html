@@ -1,0 +1,26 @@
+<div id="estate" class="estate">
+  <div class="toolbar">
+    <span class="crumb" id="estate-root" title="Current root (the $root dashboard variable)"></span>
+    <input id="estate-search" type="search" placeholder="find by name, id or type" aria-label="Find a node" />
+    <button id="estate-fit" type="button" title="Zoom to fit">fit</button>
+    <button id="estate-clear" type="button" title="Clear selection and search">clear</button>
+    <span class="count" id="estate-count"></span>
+  </div>
+  <div class="body">
+    <div class="canvas" id="estate-canvas">
+      <svg id="estate-svg" role="img" aria-label="Estate topology">
+        <defs>
+          <marker id="estate-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="arrow"></path>
+          </marker>
+        </defs>
+        <g id="estate-view"></g>
+      </svg>
+      <div class="empty" id="estate-empty" hidden>No objects. The source panel returned no rows for this root.</div>
+    </div>
+    <aside class="side" id="estate-side">
+      <div class="hint">Click a node for its details and relations. Double-click (or "make root") to re-centre the whole dashboard on it. Scroll to zoom, drag to pan, click a legend chip to hide a type.</div>
+    </aside>
+  </div>
+  <div class="legend" id="estate-legend"></div>
+</div>
